@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <string>
+#include "SolarTime.h"
 
 namespace adhan {
 
@@ -71,11 +72,16 @@ public:
 
 class Astronomical {
 public:
-    static double meanSolarLongitude(double julianDay);
-    static double apparentSolarLongitude(double julianDay);
-    static double meanLunarLongitude(double julianDay);
-    static double solarDeclination(double julianDay);
-    static double correctedHourAngle(double latitude, double declination, double angle);
+    static double julianDay(int year, int month, int day, double hours = 0);
+    static double julianCentury(double jd);
+    static double meanSolarLongitude(double T);
+    static double meanSolarAnomaly(double T);
+    static double solarEquationOfTheCenter(double T, double M);
+    static double apparentSolarLongitude(double T, double L0);
+    static double meanObliquityOfTheEcliptic(double T);
+    static double apparentObliquityOfTheEcliptic(double T, double epsilon0);
+    static double solarDeclination(double jd);
+    static double equationOfTime(double jd);
 };
 
 }

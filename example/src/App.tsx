@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import {
   multiply,
   getPrayerTimes,
@@ -12,17 +18,22 @@ import {
   type QiblaResult,
   type MethodInfo,
   type Coordinates,
-  AdhanErrorCode,
 } from 'react-native-adhan';
 
 const multiplyResult = multiply(3, 7);
 
 export default function App() {
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(null);
-  const [qiblaDirection, setQiblaDirection] = useState<QiblaResult | null>(null);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(
+    null
+  );
+  const [qiblaDirection, setQiblaDirection] = useState<QiblaResult | null>(
+    null
+  );
   const [methods, setMethods] = useState<MethodInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentMethod, setCurrentMethod] = useState<CalculationMethod>(CalculationMethod.ISNA);
+  const [currentMethod, setCurrentMethod] = useState<CalculationMethod>(
+    CalculationMethod.ISNA
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Test coordinates: Hopkins, MN
@@ -34,30 +45,31 @@ export default function App() {
   const fetchAllData = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Validate coordinates first
       const validation = validateCoordinates(coordinates);
       if (!validation.isValid) {
         throw new Error(`Invalid coordinates: ${validation.errors.join(', ')}`);
       }
-      
+
       // Test prayer times with different parameters
       const times = await getPrayerTimes({
         coordinates,
         parameters: {
           method: currentMethod,
           madhab: Madhab.Shafi,
+          fajrAngle: 18,
+          ishaAngle: 18,
           timezone: 'America/Chicago',
           adjustments: {
-            fajr: 2,
-            isha: -1,
+            fajr: 0,
+            sunrise: 0,
+            dhuhr: 0,
+            asr: 0,
+            maghrib: 0,
+            isha: 0,
           },
-          // Test custom angles for ISNA method
-          ...(currentMethod === CalculationMethod.ISNA && {
-            fajrAngle: 15.5,
-            ishaAngle: 15.5,
-          }),
         },
       });
       setPrayerTimes(times);
@@ -69,7 +81,6 @@ export default function App() {
       // Get available methods
       const availableMethods = getAvailableMethods();
       setMethods(availableMethods);
-
     } catch (err: any) {
       console.error('Error fetching data:', err);
       setError(err.message || 'Unknown error occurred');
@@ -126,7 +137,7 @@ export default function App() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Prayer Times (Hopkins, MN)</Text>
             <Text style={styles.date}>Date: {new Date().toDateString()}</Text>
-            
+
             {prayerTimes ? (
               <View style={styles.timesContainer}>
                 {Object.entries(prayerTimes)
@@ -163,13 +174,17 @@ export default function App() {
                 </Text>
               </View>
             ) : (
-              <Text style={styles.errorText}>Failed to load Qibla direction</Text>
+              <Text style={styles.errorText}>
+                Failed to load Qibla direction
+              </Text>
             )}
           </View>
 
           {/* Available Methods */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Available Methods ({methods.length})</Text>
+            <Text style={styles.sectionTitle}>
+              Available Methods ({methods.length})
+            </Text>
             {methods.length > 0 ? (
               <View style={styles.methodsContainer}>
                 {methods.slice(0, 3).map((method, index) => (
@@ -190,7 +205,8 @@ export default function App() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Coordinate Validation</Text>
             <Text style={styles.testResult}>
-              Hopkins coordinates: {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)} ✅
+              Hopkins coordinates: {coordinates.latitude.toFixed(6)},{' '}
+              {coordinates.longitude.toFixed(6)} ✅
             </Text>
           </View>
         </>
