@@ -34,47 +34,125 @@ class AdhanModule(reactContext: ReactApplicationContext) :
     return try {
       val result = JSONObject()
       
-      // Parse the date
+      // Parse input date
       val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-      val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
       val date = inputFormat.parse(dateIso) ?: Date()
       
-      val calendar = Calendar.getInstance().apply {
+      // Set up timezone
+      val calculationTimeZone: TimeZone = when {
+        timezone.isNullOrEmpty() -> TimeZone.getDefault()
+        timezone.startsWith("+") || timezone.startsWith("-") -> {
+          // Parse offset format like "+05:00" or "-05:00"
+          val offsetStr = timezone.substring(1)
+          val parts = offsetStr.split(":")
+          if (parts.size >= 2) {
+            val hours = parts[0].toIntOrNull() ?: 0
+            val minutes = parts[1].toIntOrNull() ?: 0
+            val offsetMillis = ((hours * 60 + minutes) * 60 * 1000) * if (timezone.startsWith("-")) -1 else 1
+            TimeZone.getTimeZone("GMT${timezone}")
+          } else TimeZone.getDefault()
+        }
+        else -> TimeZone.getTimeZone(timezone) // Try timezone identifier
+      }
+      
+      val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US).apply {
+        timeZone = calculationTimeZone
+      }
+      
+      val calendar = Calendar.getInstance(calculationTimeZone).apply {
         time = date
       }
       
-      // Generate mock prayer times based on location and date
-      // In production, this would use the C++ adhan library
+      // Parse calculation method angles
+      var fajrAngle = 15.0 // Default ISNA
+      var ishaAngle = 15.0
+      var ishaIsInterval = false
+      var ishaInterval = 0.0
       
-      // Fajr time
-      calendar.set(Calendar.HOUR_OF_DAY, 5)
-      calendar.set(Calendar.MINUTE, 30)
-      result.put("fajr", outputFormat.format(calendar.time))
+      // Set method-specific angles
+      when (method) {
+        "ISNA" -> { fajrAngle = 15.0; ishaAngle = 15.0 }
+        "MWL" -> { fajrAngle = 18.0; ishaAngle = 17.0 }
+        "Karachi" -> { fajrAngle = 18.0; ishaAngle = 18.0 }
+        "Egypt" -> { fajrAngle = 19.5; ishaAngle = 17.5 }
+        "UmmAlQura" -> { fajrAngle = 18.5; ishaInterval = 90.0; ishaIsInterval = true }
+        "Dubai" -> { fajrAngle = 18.2; ishaAngle = 18.2 }
+        "Kuwait" -> { fajrAngle = 18.0; ishaAngle = 17.5 }
+        "Qatar" -> { fajrAngle = 18.0; ishaInterval = 90.0; ishaIsInterval = true }
+        "Singapore" -> { fajrAngle = 20.0; ishaAngle = 18.0 }
+        "Tehran" -> { fajrAngle = 17.7; ishaAngle = 14.0 }
+        "Turkey" -> { fajrAngle = 18.0; ishaAngle = 17.0 }
+      }
       
-      // Sunrise time
-      calendar.set(Calendar.HOUR_OF_DAY, 7)
-      calendar.set(Calendar.MINUTE, 0)
-      result.put("sunrise", outputFormat.format(calendar.time))
+      // Override with custom angles if provided
+      customAngles?.let { angles ->
+        try {
+          val customDict = JSONObject(angles)
+          customDict.optDouble("fajrAngle").let { if (it != 0.0) fajrAngle = it }
+          customDict.optDouble("ishaAngle").let { if (it != 0.0) { ishaAngle = it; ishaIsInterval = false } }
+          customDict.optDouble("ishaInterval").let { if (it != 0.0) { ishaInterval = it; ishaIsInterval = true } }
+        } catch (e: Exception) {
+          Log.w(NAME, "Failed to parse custom angles: $angles", e)
+        }
+      }
       
-      // Dhuhr time
-      calendar.set(Calendar.HOUR_OF_DAY, 12)
-      calendar.set(Calendar.MINUTE, 30)
-      result.put("dhuhr", outputFormat.format(calendar.time))
+      // Calculate prayer times using accurate astronomical calculations
+      val dayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
+      val P = asin(0.39795 * cos(0.98563 * (dayOfYear - 173) * PI / 180.0))
+      val argument = (0.0145 * sin(4 * PI * (dayOfYear - 81) / 365.0) - 0.1679 * sin(2 * PI * (dayOfYear - 81) / 365.0))
+      val equationOfTime = 4 * (longitude - 15 * (calculationTimeZone.rawOffset / 3600000.0)) + 4 * argument
       
-      // Asr time
-      calendar.set(Calendar.HOUR_OF_DAY, 15)
-      calendar.set(Calendar.MINUTE, 45)
-      result.put("asr", outputFormat.format(calendar.time))
+      // Calculate solar noon
+      val solarNoon = 12.0 - equationOfTime / 60.0
       
-      // Maghrib time
-      calendar.set(Calendar.HOUR_OF_DAY, 18)
-      calendar.set(Calendar.MINUTE, 15)
-      result.put("maghrib", outputFormat.format(calendar.time))
+      // Calculate sunrise and sunset
+      val latRad = Math.toRadians(latitude)
+      val hourAngleSunrise = acos(-tan(latRad) * tan(P)) * 180.0 / PI / 15.0
+      val sunrise = solarNoon - hourAngleSunrise
+      val sunset = solarNoon + hourAngleSunrise
       
-      // Isha time
-      calendar.set(Calendar.HOUR_OF_DAY, 19)
-      calendar.set(Calendar.MINUTE, 45)
-      result.put("isha", outputFormat.format(calendar.time))
+      // Calculate Fajr
+      val fajrHourAngle = acos((-sin(Math.toRadians(fajrAngle)) - sin(latRad) * sin(P)) / (cos(latRad) * cos(P))) * 180.0 / PI / 15.0
+      val fajr = solarNoon - fajrHourAngle
+      
+      // Calculate Asr (consider Madhab)
+      val madhubMultiplier = if (madhab == "Hanafi") 2.0 else 1.0
+      val asrAltitude = atan(1.0 / (madhubMultiplier + tan((90.0 - latitude) * PI / 180.0) * tan(P))) * 180.0 / PI
+      val asrHourAngle = acos((sin(Math.toRadians(asrAltitude)) - sin(latRad) * sin(P)) / (cos(latRad) * cos(P))) * 180.0 / PI / 15.0
+      val asr = solarNoon + asrHourAngle
+      
+      // Calculate Isha
+      val isha = if (ishaIsInterval) {
+        sunset + ishaInterval / 60.0
+      } else {
+        val ishaHourAngle = acos((-sin(Math.toRadians(ishaAngle)) - sin(latRad) * sin(P)) / (cos(latRad) * cos(P))) * 180.0 / PI / 15.0
+        solarNoon + ishaHourAngle
+      }
+      
+      // Parse adjustments if provided
+      val adj = adjustments?.let {
+        try { JSONObject(it) } catch (e: Exception) { null }
+      }
+      
+      // Create final dates with adjustments
+      fun createPrayerTime(hour: Double, prayerName: String): String {
+        val finalHour = hour.toInt()
+        val finalMinute = ((hour - finalHour) * 60).toInt() + (adj?.optInt(prayerName) ?: 0)
+        
+        calendar.set(Calendar.HOUR_OF_DAY, finalHour)
+        calendar.set(Calendar.MINUTE, finalMinute)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        
+        return outputFormat.format(calendar.time)
+      }
+      
+      result.put("fajr", createPrayerTime(fajr, "fajr"))
+      result.put("sunrise", createPrayerTime(sunrise, "sunrise"))
+      result.put("dhuhr", createPrayerTime(solarNoon, "dhuhr"))
+      result.put("asr", createPrayerTime(asr, "asr"))
+      result.put("maghrib", createPrayerTime(sunset, "maghrib"))
+      result.put("isha", createPrayerTime(isha, "isha"))
       
       result.toString()
     } catch (e: Exception) {
@@ -133,7 +211,9 @@ class AdhanModule(reactContext: ReactApplicationContext) :
     endDateIso: String,
     method: String,
     madhab: String?,
-    adjustments: String?
+    timezone: String?,
+    adjustments: String?,
+    customAngles: String?
   ): String {
     return try {
       val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -145,7 +225,7 @@ class AdhanModule(reactContext: ReactApplicationContext) :
       
       while (calendar.time <= endDate) {
         val dateIso = inputFormat.format(calendar.time)
-        val prayerTimesJson = getPrayerTimes(latitude, longitude, dateIso, method, madhab, adjustments)
+        val prayerTimesJson = getPrayerTimes(latitude, longitude, dateIso, method, madhab, timezone, adjustments, customAngles)
         
         // Parse and add date field
         val prayerTimes = JSONObject(prayerTimesJson)

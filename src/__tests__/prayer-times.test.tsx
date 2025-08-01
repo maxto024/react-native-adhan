@@ -1,8 +1,8 @@
-import { getPrayerTimes, CalculationMethods, type PrayerTimesResult } from '../index';
+import { getPrayerTimes, CalculationMethod, type PrayerTimesResult } from '../index';
 
 // Mock the native module for testing
 jest.mock('../NativeAdhan', () => ({
-  getPrayerTimes: jest.fn((lat: number, lng: number, date: string, method: string): PrayerTimesResult => ({
+  getPrayerTimes: jest.fn((): string => JSON.stringify({
     fajr: '2024-01-01T05:30:00',
     sunrise: '2024-01-01T07:00:00',
     dhuhr: '2024-01-01T12:30:00',
@@ -16,10 +16,13 @@ jest.mock('../NativeAdhan', () => ({
 describe('getPrayerTimes', () => {
   it('should return prayer times for valid coordinates and date', async () => {
     const result = await getPrayerTimes({
-      latitude: 21.4225,
-      longitude: 39.8262,
-      dateIso: '2024-01-01',
-      method: CalculationMethods.ISNA,
+      coordinates: {
+        latitude: 21.4225,
+        longitude: 39.8262,
+      },
+      parameters: {
+        method: CalculationMethod.ISNA,
+      },
     });
 
     expect(result).toEqual({
@@ -34,18 +37,21 @@ describe('getPrayerTimes', () => {
 
   it('should work with different calculation methods', async () => {
     const methods = [
-      CalculationMethods.ISNA,
-      CalculationMethods.MWL,
-      CalculationMethods.Karachi,
-      CalculationMethods.Egypt,
+      CalculationMethod.ISNA,
+      CalculationMethod.MWL,
+      CalculationMethod.Karachi,
+      CalculationMethod.Egypt,
     ];
 
     for (const method of methods) {
       const result = await getPrayerTimes({
-        latitude: 40.7128,
-        longitude: -74.0060,
-        dateIso: '2024-06-15',
-        method,
+        coordinates: {
+          latitude: 40.7128,
+          longitude: -74.0060,
+        },
+        parameters: {
+          method,
+        },
       });
 
       expect(result).toBeDefined();

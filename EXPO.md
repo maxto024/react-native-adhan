@@ -1,47 +1,54 @@
 # Expo Integration Guide
 
-This guide shows how to use `react-native-adhan` with Expo development builds.
+Complete guide for integrating `react-native-adhan` with Expo projects using development builds. This library provides accurate Islamic prayer time calculations with full TurboModule support.
 
-## Prerequisites
+## ⚠️ Important Requirements
 
-- Expo SDK 50+ 
-- Expo CLI or Expo development build workflow
-- Physical device or simulator (Expo Go doesn't support native modules)
+- **Development Build Required**: This library uses TurboModules and won't work with Expo Go
+- **Expo SDK 48+**: Recommended for best New Architecture support
+- **EAS Build or Local Builds**: You need either an EAS subscription or local development environment
 
-## Installation
+## 🚀 Quick Start
 
-1. Install the package:
+### 1. Install the Package
+
 ```bash
 npx expo install react-native-adhan
 ```
 
-2. Add the config plugin to your `app.json` or `app.config.js`:
+### 2. Add Config Plugin
+
+Add the config plugin to your `app.json`:
 
 ```json
 {
   "expo": {
+    "name": "My Prayer App",
     "plugins": [
-      ["react-native-adhan/plugin"]
+      "react-native-adhan"
     ]
   }
 }
 ```
 
-With options:
-```json
-{
-  "expo": {
-    "plugins": [
+**Advanced Configuration** (app.config.js):
+```js
+export default {
+  expo: {
+    name: "Prayer Times App",
+    plugins: [
       [
-        "react-native-adhan/plugin",
+        "react-native-adhan",
         {
-          "enableCppOptimizations": true,
-          "customMethods": ["ISNA", "MWL", "Karachi"]
+          // Enable New Architecture optimizations
+          enableNewArchitecture: true,
+          // Custom iOS deployment target
+          iosDeploymentTarget: "11.0"
         }
       ]
     ]
   }
-}
+};
 ```
 
 ## Development Build
@@ -60,54 +67,167 @@ npx eas build --platform ios --profile development
 npx eas build --platform android --profile development
 ```
 
-## Usage in Expo
+## 📱 Complete Expo Example
 
-```typescript
+```tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import { getPrayerTimes, CalculationMethod, type PrayerTimesResult } from 'react-native-adhan';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { 
+  getPrayerTimes, 
+  getQiblaDirection,
+  CalculationMethod, 
+  Madhab,
+  type PrayerTimesResult,
+  type QiblaResult 
+} from 'react-native-adhan';
 
-export default function App() {
+export default function ExpoAdhanApp() {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(null);
+  const [qibla, setQibla] = useState<QiblaResult | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPrayerTimes = async () => {
+    const fetchPrayerData = async () => {
       try {
+        const coordinates = { latitude: 40.7128, longitude: -74.0060 }; // NYC
+        
+        // Fetch prayer times with enhanced parameters
         const times = await getPrayerTimes({
-          coordinates: {
-            latitude: 40.7128,
-            longitude: -74.0060
-          },
+          coordinates,
           parameters: {
-            method: CalculationMethod.ISNA
-          }
+            method: CalculationMethod.ISNA,
+            madhab: Madhab.Shafi,  // Asr jurisprudence
+            adjustments: {
+              fajr: 2,   // +2 minutes
+              isha: -1   // -1 minute
+            }
+          },
+          timezone: 'America/New_York'  // Timezone support
         });
+        
+        // Fetch Qibla direction
+        const qiblaDirection = await getQiblaDirection(coordinates);
+        
         setPrayerTimes(times);
+        setQibla(qiblaDirection);
       } catch (error) {
-        console.error('Error fetching prayer times:', error);
+        console.error('Error fetching prayer data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchPrayerTimes();
+    fetchPrayerData();
   }, []);
 
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Loading prayer times...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ fontSize: 24, marginBottom: 20 }}>Prayer Times</Text>
-      {prayerTimes ? (
-        <View>
-          <Text>Fajr: {new Date(prayerTimes.fajr).toLocaleTimeString()}</Text>
-          <Text>Dhuhr: {new Date(prayerTimes.dhuhr).toLocaleTimeString()}</Text>
-          <Text>Asr: {new Date(prayerTimes.asr).toLocaleTimeString()}</Text>
-          <Text>Maghrib: {new Date(prayerTimes.maghrib).toLocaleTimeString()}</Text>
-          <Text>Isha: {new Date(prayerTimes.isha).toLocaleTimeString()}</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Prayer Times NYC</Text>
+      <Text style={styles.subtitle}>Using ISNA method (Shafi madhab)</Text>
+      
+      {prayerTimes && (
+        <View style={styles.timesContainer}>
+          {Object.entries(prayerTimes).map(([prayer, time]) => (
+            <View key={prayer} style={styles.timeRow}>
+              <Text style={styles.prayerName}>
+                {prayer.charAt(0).toUpperCase() + prayer.slice(1)}
+              </Text>
+              <Text style={styles.prayerTime}>
+                {new Date(time).toLocaleTimeString()}
+              </Text>
+            </View>
+          ))}
         </View>
-      ) : (
-        <Text>Loading...</Text>
       )}
-    </View>
+      
+      {qibla && (
+        <View style={styles.qiblaContainer}>
+          <Text style={styles.qiblaTitle}>Qibla Direction</Text>
+          <Text style={styles.qiblaText}>
+            {qibla.direction.toFixed(1)}° ({qibla.compassBearing})
+          </Text>
+          <Text style={styles.distance}>
+            Distance: {qibla.distance.toFixed(0)} km
+          </Text>
+        </View>
+      )}
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 5 },
+  subtitle: { fontSize: 14, textAlign: 'center', color: '#666', marginBottom: 20 },
+  timesContainer: { backgroundColor: 'white', borderRadius: 10, padding: 15, marginBottom: 15 },
+  timeRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
+  },
+  prayerName: { fontSize: 16, fontWeight: '500' },
+  prayerTime: { fontSize: 16, color: '#007AFF' },
+  qiblaContainer: { 
+    backgroundColor: 'white', 
+    borderRadius: 10, 
+    padding: 15,
+    alignItems: 'center'
+  },
+  qiblaTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  qiblaText: { fontSize: 16, color: '#007AFF' },
+  distance: { fontSize: 14, color: '#666', marginTop: 5 }
+});
+```
+
+## 🌍 Advanced Features Examples
+
+### Timezone Support
+```tsx
+// Using timezone identifiers
+const makkahTimes = await getPrayerTimes({
+  coordinates: { latitude: 21.4225, longitude: 39.8262 },
+  parameters: { method: CalculationMethod.UmmAlQura },
+  timezone: 'Asia/Riyadh'
+});
+
+// Using timezone offsets
+const pakistanTimes = await getPrayerTimes({
+  coordinates: { latitude: 33.6844, longitude: 73.0479 },
+  parameters: { method: CalculationMethod.Karachi },
+  timezone: '+05:00'
+});
+```
+
+### Madhab Differences
+```tsx
+// Shafi madhab (earlier Asr)
+const shafiTimes = await getPrayerTimes({
+  coordinates: { latitude: 33.6844, longitude: 73.0479 },
+  parameters: {
+    method: CalculationMethod.Karachi,
+    madhab: Madhab.Shafi
+  }
+});
+
+// Hanafi madhab (later Asr)
+const hanafiTimes = await getPrayerTimes({
+  coordinates: { latitude: 33.6844, longitude: 73.0479 },
+  parameters: {
+    method: CalculationMethod.Karachi,
+    madhab: Madhab.Hanafi
+  }
+});
 ```
 
 ## Plugin Configuration Options

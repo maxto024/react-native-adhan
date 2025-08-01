@@ -117,6 +117,90 @@ The `package.json` file contains various scripts for common tasks:
 - `yarn example android`: run the example app on Android.
 - `yarn example ios`: run the example app on iOS.
 
+### Testing Enhanced Features
+
+When contributing to react-native-adhan, please ensure you test the enhanced features we've implemented:
+
+#### 1. Calculation Method Testing
+Test your changes with all 12 supported calculation methods:
+```bash
+# Test in the example app with different methods
+# ISNA, MWL, Karachi, Egypt, UmmAlQura, Dubai, Kuwait, Qatar, Singapore, Tehran, Turkey
+```
+
+#### 2. Timezone Support Testing
+```typescript
+// Test timezone identifiers
+const times1 = await getPrayerTimes({
+  coordinates: { latitude: 40.7128, longitude: -74.0060 },
+  parameters: { method: CalculationMethod.ISNA },
+  timezone: 'America/New_York'
+});
+
+// Test timezone offsets
+const times2 = await getPrayerTimes({
+  coordinates: { latitude: 40.7128, longitude: -74.0060 },
+  parameters: { method: CalculationMethod.ISNA },
+  timezone: '-05:00'
+});
+```
+
+#### 3. Madhab (Asr Jurisprudence) Testing
+```typescript
+// Test Shafi vs Hanafi differences
+const shafiTimes = await getPrayerTimes({
+  coordinates: { latitude: 33.6844, longitude: 73.0479 },
+  parameters: { method: CalculationMethod.Karachi, madhab: Madhab.Shafi }
+});
+
+const hanafiTimes = await getPrayerTimes({
+  coordinates: { latitude: 33.6844, longitude: 73.0479 },
+  parameters: { method: CalculationMethod.Karachi, madhab: Madhab.Hanafi }
+});
+
+// Hanafi Asr should be later than Shafi
+console.assert(new Date(hanafiTimes.asr).getTime() > new Date(shafiTimes.asr).getTime());
+```
+
+#### 4. Custom Parameters Testing
+```typescript
+// Test custom angles and adjustments
+const customTimes = await getPrayerTimes({
+  coordinates: { latitude: 40.7128, longitude: -74.0060 },
+  parameters: {
+    method: CalculationMethod.ISNA,
+    customAngles: { fajrAngle: 16.0, ishaAngle: 14.0 },
+    adjustments: { fajr: 2, isha: -1 }
+  }
+});
+```
+
+### Islamic Accuracy Requirements
+
+This library serves the Muslim community worldwide, so accuracy is paramount:
+
+- **Verify calculations** against established Islamic authorities
+- **Test with known coordinates** and compare with trusted sources
+- **Consider regional differences** in calculation methods
+- **Ensure Madhab calculations** are mathematically correct
+- **Document sources** for any calculation formulas
+
+### Platform Consistency
+
+Ensure both iOS and Android platforms behave identically:
+
+- **Same calculation results** for identical inputs
+- **Consistent error handling** across platforms
+- **Identical API responses** and formatting
+- **Performance parity** between platforms
+
+### Performance Considerations
+
+- **TurboModule optimization**: Ensure direct JSI communication
+- **Memory efficiency**: Avoid memory leaks in native code
+- **Calculation speed**: Maintain sub-millisecond performance
+- **Bulk operations**: Test multi-day calculations efficiently
+
 ### Sending a pull request
 
 > **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
@@ -125,6 +209,31 @@ When you're sending a pull request:
 
 - Prefer small pull requests focused on one change.
 - Verify that linters and tests are passing.
+- **Test all 12 calculation methods** if modifying calculations.
+- **Test both Shafi and Hanafi madhab** if modifying Asr calculations.
+- **Test timezone support** with both identifiers and offsets.
+- **Verify iOS and Android parity** for any native code changes.
 - Review the documentation to make sure it looks good.
 - Follow the pull request template when opening a pull request.
 - For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.
+
+### Areas We Need Help With
+
+#### High Priority
+- **Calculation accuracy improvements** and validation
+- **Performance optimizations** for bulk calculations
+- **Additional Islamic calculation methods** from regional authorities
+- **Better error handling** and user feedback
+- **Documentation improvements** and examples
+
+#### Medium Priority
+- **Enhanced timezone support** for edge cases
+- **More comprehensive testing** across different coordinates
+- **Expo plugin enhancements** and optimization
+- **TypeScript improvements** and type safety
+
+#### Islamic Expertise Welcome
+- **Religious accuracy validation** by Islamic scholars
+- **Regional calculation method verification**
+- **Madhab calculation differences** research and validation
+- **Scholarly reference documentation** and sources

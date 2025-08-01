@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet, ScrollView } from 'react-native';
-import { multiply, getPrayerTimes, CalculationMethod, type PrayerTimesResult } from 'react-native-adhan';
+import {
+  multiply,
+  getPrayerTimes,
+  CalculationMethod,
+  type PrayerTimesResult,
+  Madhab,
+} from 'react-native-adhan';
 
 const multiplyResult = multiply(3, 7);
 
 export default function App() {
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(null);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,13 +22,14 @@ export default function App() {
         // Example: Hopkins, MN coordinates
         const times = await getPrayerTimes({
           coordinates: {
-            latitude: 44.923890,
-            longitude: -93.419795
+            latitude: 11.8251,
+            longitude: 42.5903,
           },
           parameters: {
-            method: CalculationMethod.ISNA
-            
-          }
+            method: CalculationMethod.Egypt,
+            madhab: Madhab.Hanafi,
+         //   timezone: 'America/Chicago',
+          },
         });
         setPrayerTimes(times);
       } catch (error) {
@@ -36,20 +45,24 @@ export default function App() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>React Native Adhan</Text>
-      
+
       <Text style={styles.subtitle}>Multiply Test: {multiplyResult}</Text>
-      
+
       <Text style={styles.subtitle}>Prayer Times (Hopkins)</Text>
       <Text style={styles.date}>Date: {new Date().toDateString()}</Text>
-      
+
       {loading ? (
         <Text>Loading prayer times...</Text>
       ) : prayerTimes ? (
         <View style={styles.timesContainer}>
           {Object.entries(prayerTimes).map(([prayer, time]) => (
             <View key={prayer} style={styles.timeRow}>
-              <Text style={styles.prayerName}>{prayer.charAt(0).toUpperCase() + prayer.slice(1)}</Text>
-              <Text style={styles.prayerTime}>{new Date(time).toLocaleTimeString()}</Text>
+              <Text style={styles.prayerName}>
+                {prayer.charAt(0).toUpperCase() + prayer.slice(1)}
+              </Text>
+              <Text style={styles.prayerTime}>
+                {new Date(time).toLocaleTimeString()}
+              </Text>
             </View>
           ))}
         </View>

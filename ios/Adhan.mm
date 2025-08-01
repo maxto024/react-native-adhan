@@ -253,7 +253,9 @@ RCT_EXPORT_MODULE()
                      endDateIso:(NSString *)endDateIso
                           method:(NSString *)method
                           madhab:(NSString *)madhab
-                     adjustments:(NSString *)adjustments {
+                        timezone:(NSString *)timezone
+                     adjustments:(NSString *)adjustments
+                    customAngles:(NSString *)customAngles {
     
     NSDateFormatter *inputFormatter = [[NSDateFormatter alloc] init];
     [inputFormatter setDateFormat:@"yyyy-MM-dd"];
@@ -271,7 +273,7 @@ RCT_EXPORT_MODULE()
     
     while ([currentDate compare:endDate] != NSOrderedDescending) {
         NSString *dateIso = [inputFormatter stringFromDate:currentDate];
-        NSString *prayerTimesJson = [self getPrayerTimes:latitude longitude:longitude dateIso:dateIso method:method madhab:madhab adjustments:adjustments];
+        NSString *prayerTimesJson = [self getPrayerTimes:latitude longitude:longitude dateIso:dateIso method:method madhab:madhab timezone:timezone adjustments:adjustments customAngles:customAngles];
         
         // Parse the JSON and add date field
         NSError *error;
