@@ -43,44 +43,17 @@ class AdhanModule(reactContext: ReactApplicationContext) :
     dateIso: String,
     method: String,
     madhab: String?,
-    timezone: String?,
     adjustments: String?,
     customAngles: String?
   ): String {
     return try {
-      // Use native C++ calculations for accurate astronomical results
-      val nativeResult = calculatePrayerTimesNative(
-        latitude, longitude, dateIso, method, madhab, timezone, adjustments
-      )
-      
-      if (nativeResult.isNotEmpty() && nativeResult != "{}") {
-        // Apply custom angles if provided
-        customAngles?.let { angles ->
-          try {
-            val customDict = JSONObject(angles)
-            val result = JSONObject(nativeResult)
-            
-            // If custom angles are provided, recalculate with those angles
-            if (customDict.has("fajrAngle") || customDict.has("ishaAngle") || customDict.has("ishaInterval")) {
-              Log.i(NAME, "Custom angles provided, using fallback calculation")
-              return fallbackCalculation(latitude, longitude, dateIso, method, madhab, timezone, adjustments, customAngles)
-            }
-            
-            return result.toString()
-          } catch (e: Exception) {
-            Log.w(NAME, "Failed to parse custom angles: $angles", e)
-          }
-        }
-        
-        return nativeResult
-      } else {
-        // Fallback to Kotlin implementation if native fails
-        Log.w(NAME, "Native calculation failed, using fallback")
-        return fallbackCalculation(latitude, longitude, dateIso, method, madhab, timezone, adjustments, customAngles)
-      }
+      // Debug logging to trace parameters
+      Log.i(NAME, "Android getPrayerTimes called with method: $method, madhab: $madhab, lat: $latitude, lon: $longitude, date: $dateIso")
+      Log.i(NAME, "Using fallback calculation for testing. Method: $method, Madhab: $madhab")
+      return fallbackCalculation(latitude, longitude, dateIso, method, madhab, null, adjustments, customAngles)
     } catch (e: Exception) {
-      Log.e(NAME, "Error in native calculation, using fallback", e)
-      return fallbackCalculation(latitude, longitude, dateIso, method, madhab, timezone, adjustments, customAngles)
+      Log.e(NAME, "Error in fallback calculation", e)
+      return "{}"
     }
   }
 
@@ -135,10 +108,12 @@ class AdhanModule(reactContext: ReactApplicationContext) :
         "ISNA" -> { 
           fajrAngle = 15.0; ishaAngle = 15.0
           methodAdjustments["dhuhr"] = 1 // +1 minute
+          Log.i(NAME, "Android using ISNA method: fajr=${fajrAngle}°, isha=${ishaAngle}°")
         }
         "MWL" -> { 
           fajrAngle = 18.0; ishaAngle = 17.0
           methodAdjustments["dhuhr"] = 1 // +1 minute
+          Log.i(NAME, "Android using MWL method: fajr=${fajrAngle}°, isha=${ishaAngle}°")
         }
         "Karachi" -> { 
           fajrAngle = 18.0; ishaAngle = 18.0
@@ -233,8 +208,8 @@ class AdhanModule(reactContext: ReactApplicationContext) :
       val E = 4 * (y * sin(2 * L0 * PI / 180.0) - 2 * sin(M) + 4 * sin(M) * y * cos(2 * L0 * PI / 180.0) -
                    0.5 * y * y * sin(4 * L0 * PI / 180.0) - 1.25 * sin(2 * M)) * 180.0 / PI
       
-      // Solar noon with longitude and timezone corrections
-      val solarNoon = 12.0 - (longitude / 15.0) - (calculationTimeZone.getOffset(date.time) / 3600000.0) + (E / 60.0)
+      // Solar noon calculation with longitude correction
+      val solarNoon = 12.0 - (longitude / 15.0) + (E / 60.0)
       
       // Sunrise and sunset with atmospheric refraction
       val latRad = latitude * PI / 180.0
@@ -247,25 +222,44 @@ class AdhanModule(reactContext: ReactApplicationContext) :
         val sunset = solarNoon + H
         
         // Fajr calculation
-        val fajrH = acos((sin(-fajrAngle * PI / 180.0) - sin(latRad) * sin(declination)) / 
-                        (cos(latRad) * cos(declination))) * 180.0 / PI / 15.0
-        val fajr = solarNoon - fajrH
+        val fajrCos = (sin(-fajrAngle * PI / 180.0) - sin(latRad) * sin(declination)) / (cos(latRad) * cos(declination))
+        val fajr = if (abs(fajrCos) <= 1) {
+          val fajrH = acos(fajrCos) * 180.0 / PI / 15.0
+          solarNoon - fajrH
+        } else {
+          // Fallback for extreme latitudes
+          sunrise - 1.5 // 1.5 hours before sunrise
+        }
         
-        // Asr calculation with madhab consideration
-        val madhubMultiplier = if (madhab == "Hanafi") 2.0 else 1.0
-        val asrAngle = atan(1.0 / (madhubMultiplier + tan(abs(latRad - declination))))
-        val asrH = acos((sin(asrAngle) - sin(latRad) * sin(declination)) / 
-                       (cos(latRad) * cos(declination))) * 180.0 / PI / 15.0
-        val asr = solarNoon + asrH
+        // Asr calculation with madhab consideration (following adhan-swift logic)
+        val shadowLength = if (madhab == "Hanafi") 2.0 else 1.0
+        val tangent = abs(latRad - declination)
+        val inverse = shadowLength + tan(tangent)
+        val asrAngle = atan(1.0 / inverse)
+        val asrCos = (sin(asrAngle) - sin(latRad) * sin(declination)) / (cos(latRad) * cos(declination))
+        val asr = if (abs(asrCos) <= 1) {
+          val asrH = acos(asrCos) * 180.0 / PI / 15.0
+          solarNoon + asrH
+        } else {
+          // Fallback for extreme latitudes
+          solarNoon + 3.0 // 3 hours after noon
+        }
         
         // Isha calculation
         val isha = if (ishaIsInterval) {
           sunset + ishaInterval / 60.0
         } else {
-          val ishaH = acos((sin(-ishaAngle * PI / 180.0) - sin(latRad) * sin(declination)) / 
-                          (cos(latRad) * cos(declination))) * 180.0 / PI / 15.0
-          solarNoon + ishaH
+          val ishaCos = (sin(-ishaAngle * PI / 180.0) - sin(latRad) * sin(declination)) / (cos(latRad) * cos(declination))
+          if (abs(ishaCos) <= 1) {
+            val ishaH = acos(ishaCos) * 180.0 / PI / 15.0
+            solarNoon + ishaH
+          } else {
+            // Fallback for extreme latitudes
+            sunset + 1.5 // 1.5 hours after sunset
+          }
         }
+        
+        Log.i(NAME, "Android calculated times: fajr=$fajr, sunrise=$sunrise, dhuhr=$solarNoon, asr=$asr, maghrib=$sunset, isha=$isha")
         
         // Parse user adjustments
         val userAdj = adjustments?.let {
@@ -286,12 +280,39 @@ class AdhanModule(reactContext: ReactApplicationContext) :
           // Total adjustment = method adjustment + user adjustment
           val finalMinute = baseMinute + methodAdjustment + userAdjustment
           
-          calendar.set(Calendar.HOUR_OF_DAY, finalHour)
-          calendar.set(Calendar.MINUTE, finalMinute)
+          // Handle minute overflow/underflow
+          var adjustedHour = finalHour
+          var adjustedMinute = finalMinute
+          
+          if (adjustedMinute >= 60) {
+            adjustedHour += adjustedMinute / 60
+            adjustedMinute %= 60
+          } else if (adjustedMinute < 0) {
+            adjustedHour -= ((-adjustedMinute - 1) / 60 + 1)
+            adjustedMinute = 60 - ((-adjustedMinute) % 60)
+            if (adjustedMinute == 60) adjustedMinute = 0
+          }
+          
+          // Handle hour overflow/underflow for day boundaries
+          if (adjustedHour >= 24) {
+            adjustedHour %= 24
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+          } else if (adjustedHour < 0) {
+            adjustedHour = 24 + (adjustedHour % 24)
+            calendar.add(Calendar.DAY_OF_YEAR, -1)
+          }
+          
+          calendar.set(Calendar.HOUR_OF_DAY, adjustedHour)
+          calendar.set(Calendar.MINUTE, adjustedMinute)
           calendar.set(Calendar.SECOND, 0)
           calendar.set(Calendar.MILLISECOND, 0)
           
-          return outputFormat.format(calendar.time)
+          val result = outputFormat.format(calendar.time)
+          
+          // Reset calendar to original date to avoid cumulative day changes
+          calendar.time = date
+          
+          return result
         }
         
         result.put("fajr", createPrayerTime(fajr, "fajr"))
@@ -311,24 +332,7 @@ class AdhanModule(reactContext: ReactApplicationContext) :
 
   override fun getQiblaDirection(latitude: Double, longitude: Double): String {
     return try {
-      // Try native calculation first
-      val nativeResult = calculateQiblaDirectionNative(latitude, longitude)
-      
-      if (nativeResult.isNotEmpty() && nativeResult != "{}") {
-        // Add compass bearing to native result
-        val result = JSONObject(nativeResult)
-        val direction = result.getDouble("direction")
-        
-        val bearings = arrayOf("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
-                             "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
-        val index = ((direction / 22.5).roundToInt()) % 16
-        val compassBearing = bearings[index]
-        
-        result.put("compassBearing", compassBearing)
-        return result.toString()
-      }
-      
-      // Fallback calculation
+      // Use fallback calculation (native disabled for testing)
       val makkahLat = 21.4225
       val makkahLon = 39.8262
       
@@ -386,7 +390,7 @@ class AdhanModule(reactContext: ReactApplicationContext) :
       
       while (calendar.time <= endDate) {
         val dateIso = inputFormat.format(calendar.time)
-        val prayerTimesJson = getPrayerTimes(latitude, longitude, dateIso, method, madhab, timezone, adjustments, customAngles)
+        val prayerTimesJson = getPrayerTimes(latitude, longitude, dateIso, method, madhab, adjustments, customAngles)
         
         // Parse and add date field
         val prayerTimes = JSONObject(prayerTimesJson)
@@ -482,11 +486,8 @@ class AdhanModule(reactContext: ReactApplicationContext) :
     const val NAME = "Adhan"
     
     init {
-      try {
-        System.loadLibrary("adhan")
-      } catch (e: UnsatisfiedLinkError) {
-        Log.w(NAME, "Native library not available, using fallback calculations", e)
-      }
+      // Temporarily disable native library loading for testing
+      Log.i(NAME, "Native library loading disabled for testing, using fallback calculations")
     }
   }
 }

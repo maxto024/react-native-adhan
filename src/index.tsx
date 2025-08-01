@@ -219,7 +219,6 @@ export async function getPrayerTimes(
     // Prepare parameters with adhan-swift defaults
     const method = request.parameters?.method || CalculationMethod.MWL; // Default to Muslim World League like adhan-swift
     const madhab = request.parameters?.madhab || Madhab.Shafi; // Default to Shafi (shadow length = 1.0)
-    const timezone = request.timezone || request.parameters?.timezone;
     const adjustments = request.parameters?.adjustments
       ? JSON.stringify(request.parameters.adjustments)
       : undefined;
@@ -243,23 +242,46 @@ export async function getPrayerTimes(
     })();
 
     // Call TurboModule with all parameters
-    const resultJson = AdhanTurboModule.getPrayerTimes(
+    const resultJson = await AdhanTurboModule.getPrayerTimes(
       request.coordinates.latitude,
       request.coordinates.longitude,
       dateIso,
       method,
       madhab,
-      timezone,
       adjustments,
       customAngles
     );
-
-    const result: PrayerTimesResult = JSON.parse(resultJson);
 
     if (moduleConfig.enablePerformanceMonitoring) {
       const calculationTime = Date.now() - startTime;
       console.log(`[Adhan] TurboModule calculation took ${calculationTime}ms`);
     }
+
+    // Parse the JSON response from native module
+    const rawResult = JSON.parse(resultJson);
+    
+    // Both C++ native and Android fallback now return ISO date strings
+    const result: PrayerTimesResult = {
+      fajr: rawResult.fajr || '',
+      sunrise: rawResult.sunrise || '',
+      dhuhr: rawResult.dhuhr || '',
+      asr: rawResult.asr || '',
+      maghrib: rawResult.maghrib || '',
+      isha: rawResult.isha || '',
+      metadata: {
+        method,
+        madhab,
+        coordinates: request.coordinates,
+        date: typeof request.date === 'string' 
+          ? { 
+              year: parseInt(request.date.split('-')[0] || '0'), 
+              month: parseInt(request.date.split('-')[1] || '0'), 
+              day: parseInt(request.date.split('-')[2] || '0') 
+            }
+          : request.date || { year: new Date().getFullYear(), month: new Date().getMonth() + 1, day: new Date().getDate() },
+        hasAdjustments: !!request.parameters?.adjustments,
+      },
+    };
 
     return result;
   } catch (error) {
@@ -289,7 +311,7 @@ export async function getQiblaDirection(
   }
 
   try {
-    const resultJson = AdhanTurboModule.getQiblaDirection(
+    const resultJson = await AdhanTurboModule.getQiblaDirection(
       coordinates.latitude,
       coordinates.longitude
     );
@@ -402,9 +424,9 @@ export async function getBulkPrayerTimes(
 /**
  * Get information about all available calculation methods
  */
-export function getAvailableMethods(): MethodInfo[] {
+export async function getAvailableMethods(): Promise<MethodInfo[]> {
   try {
-    const resultJson = AdhanTurboModule.getAvailableMethods();
+    const resultJson = await AdhanTurboModule.getAvailableMethods();
     return JSON.parse(resultJson);
   } catch (error) {
     // Fallback static method information

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Text,
   View,
@@ -22,6 +22,12 @@ import {
 
 const multiplyResult = multiply(3, 7);
 
+// Test coordinates: Hopkins, MN
+const coordinates: Coordinates = {
+  latitude: 44.924054,
+  longitude: -93.41964,
+};
+
 export default function App() {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(
     null
@@ -34,15 +40,10 @@ export default function App() {
   const [currentMethod, setCurrentMethod] = useState<CalculationMethod>(
     CalculationMethod.ISNA
   );
+  const [currentMadhab, setCurrentMadhab] = useState<Madhab>(Madhab.Shafi);
   const [error, setError] = useState<string | null>(null);
 
-  // Test coordinates: Hopkins, MN
-  const coordinates: Coordinates = {
-    latitude: 44.924054,
-    longitude: -93.41964,
-  };
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -58,7 +59,7 @@ export default function App() {
         coordinates,
         parameters: {
           method: currentMethod,
-          madhab: Madhab.Shafi,
+          madhab: currentMadhab,
           fajrAngle: 18,
           ishaAngle: 18,
           timezone: 'America/Chicago',
@@ -79,7 +80,7 @@ export default function App() {
       setQiblaDirection(qibla);
 
       // Get available methods
-      const availableMethods = getAvailableMethods();
+      const availableMethods = await getAvailableMethods();
       setMethods(availableMethods);
     } catch (err: any) {
       console.error('Error fetching data:', err);
@@ -87,17 +88,24 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentMethod, currentMadhab]);
 
   useEffect(() => {
     fetchAllData();
-  }, [currentMethod]);
+  }, [fetchAllData]);
 
   const switchMethod = () => {
     const methodKeys = Object.values(CalculationMethod);
     const currentIndex = methodKeys.indexOf(currentMethod);
     const nextIndex = (currentIndex + 1) % methodKeys.length;
-    setCurrentMethod(methodKeys[nextIndex]);
+    const nextMethod = methodKeys[nextIndex];
+    if (nextMethod) {
+      setCurrentMethod(nextMethod);
+    }
+  };
+
+  const switchMadhab = () => {
+    setCurrentMadhab(currentMadhab === Madhab.Shafi ? Madhab.Hanafi : Madhab.Shafi);
   };
 
   return (
@@ -117,6 +125,16 @@ export default function App() {
         <TouchableOpacity style={styles.button} onPress={switchMethod}>
           <Text style={styles.buttonText}>
             Current: {currentMethod} (Tap to change)
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Madhab switcher */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Madhab (Asr Calculation)</Text>
+        <TouchableOpacity style={styles.button} onPress={switchMadhab}>
+          <Text style={styles.buttonText}>
+            Current: {currentMadhab} (Tap to change)
           </Text>
         </TouchableOpacity>
       </View>

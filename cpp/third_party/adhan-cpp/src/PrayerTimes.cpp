@@ -67,31 +67,71 @@ namespace adhan {
 
         SolarTime solarTime(date, coordinates);
         
-        double asrTime = solarTime.transit + solarTime.afternoon(params.madhab == Madhab::Hanafi ? 2.0 : 1.0);
-        double maghribTime = solarTime.sunset;
-        
-        double fajrTime = solarTime.transit + solarTime.timeForSolarAngle(-params.fajrAngle, false);
-        double ishaTime = solarTime.transit + solarTime.timeForSolarAngle(-params.ishaAngle, true);
+        DateComponents tomorrowDate = date;
+        tomorrowDate.day++;
+        SolarTime tomorrowSolarTime(tomorrowDate, coordinates);
 
-        // Safe Fajr
-        double safeFajr = solarTime.sunrise - (20.0 / 60.0);
-        if (fajrTime > safeFajr) {
+        double fajrTime = solarTime.timeForSolarAngle(Angle(-params.fajrAngle), false);
+        double sunriseTime = solarTime.sunrise;
+        double dhuhrTime = solarTime.transit;
+        double asrTime = solarTime.afternoon(params.madhab == Madhab::Hanafi ? 2.0 : 1.0);
+        double maghribTime = solarTime.sunset;
+        double ishaTime = solarTime.timeForSolarAngle(Angle(-params.ishaAngle), true);
+
+        // Adjustments
+        fajrTime += params.adjustments.fajr / 60.0;
+        sunriseTime += params.adjustments.sunrise / 60.0;
+        dhuhrTime += params.adjustments.dhuhr / 60.0;
+        asrTime += params.adjustments.asr / 60.0;
+        maghribTime += params.adjustments.maghrib / 60.0;
+        ishaTime += params.adjustments.isha / 60.0;
+
+        if (params.method == CalculationMethod::MoonsightingCommittee && coordinates.latitude >= 55) {
+            double night = tomorrowSolarTime.sunrise - solarTime.sunset;
+            fajrTime = sunriseTime - night / 7.0;
+            ishaTime = maghribTime + night / 7.0;
+        }
+
+        double safeFajr;
+        if (params.method == CalculationMethod::MoonsightingCommittee) {
+            safeFajr = Astronomical::seasonAdjustedMorningTwilight(coordinates.latitude, date.day, date.year, sunriseTime);
+        } else {
+            double portion = params.nightPortions(coordinates).fajr;
+            double night = tomorrowSolarTime.sunrise - solarTime.sunset;
+            safeFajr = sunriseTime - portion * night;
+        }
+
+        if (std::isnan(fajrTime) || fajrTime > safeFajr) {
             fajrTime = safeFajr;
         }
 
-        // Safe Isha
         if (params.ishaInterval > 0) {
             ishaTime = maghribTime + params.ishaInterval / 60.0;
         } else {
-            double safeIsha = solarTime.sunset + (20.0 / 60.0);
-            if (ishaTime < safeIsha) {
+            double safeIsha;
+            if (params.method == CalculationMethod::MoonsightingCommittee) {
+                safeIsha = Astronomical::seasonAdjustedEveningTwilight(coordinates.latitude, date.day, date.year, maghribTime, params.shafaq);
+            } else {
+                double portion = params.nightPortions(coordinates).isha;
+                double night = tomorrowSolarTime.sunrise - solarTime.sunset;
+                safeIsha = maghribTime + portion * night;
+            }
+
+            if (std::isnan(ishaTime) || ishaTime < safeIsha) {
                 ishaTime = safeIsha;
             }
         }
 
+        if (params.maghribAngle != 0) {
+            double maghribAngleTime = solarTime.timeForSolarAngle(Angle(-params.maghribAngle), true);
+            if (maghribAngleTime > maghribTime && (std::isnan(ishaTime) || maghribAngleTime < ishaTime)) {
+                maghribTime = maghribAngleTime;
+            }
+        }
+
         this->fajr = timeFromDecimal(fajrTime);
-        this->sunrise = timeFromDecimal(solarTime.sunrise);
-        this->dhuhr = timeFromDecimal(solarTime.transit);
+        this->sunrise = timeFromDecimal(sunriseTime);
+        this->dhuhr = timeFromDecimal(dhuhrTime);
         this->asr = timeFromDecimal(asrTime);
         this->maghrib = timeFromDecimal(maghribTime);
         this->isha = timeFromDecimal(ishaTime);

@@ -15,9 +15,11 @@ RCT_EXPORT_MODULE()
                      dateIso:(NSString *)dateIso
                       method:(NSString *)method
                       madhab:(NSString *)madhab
-                    timezone:(NSString *)timezone
                  adjustments:(NSString *)adjustments
                 customAngles:(NSString *)customAngles {
+    
+    // Debug logging to trace parameters
+    NSLog(@"[Adhan iOS] getPrayerTimes called with method: %@, madhab: %@", method, madhab);
     
     // Create prayer times dictionary
     NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
@@ -31,36 +33,8 @@ RCT_EXPORT_MODULE()
         date = [NSDate date]; // Fallback to current date
     }
     
-    // Set up timezone
-    NSTimeZone *calculationTimeZone;
-    if (timezone && ![timezone isEqualToString:@""]) {
-        // Try parsing as timezone identifier first
-        calculationTimeZone = [NSTimeZone timeZoneWithName:timezone];
-        if (!calculationTimeZone) {
-            // Try parsing as offset (e.g., "+05:00")
-            NSInteger secondsFromGMT = 0;
-            if ([timezone hasPrefix:@"+"]) {
-                NSString *offsetStr = [timezone substringFromIndex:1];
-                NSArray *parts = [offsetStr componentsSeparatedByString:@":"];
-                if (parts.count >= 2) {
-                    NSInteger hours = [parts[0] integerValue];
-                    NSInteger minutes = [parts[1] integerValue];
-                    secondsFromGMT = (hours * 3600) + (minutes * 60);
-                }
-            } else if ([timezone hasPrefix:@"-"]) {
-                NSString *offsetStr = [timezone substringFromIndex:1];
-                NSArray *parts = [offsetStr componentsSeparatedByString:@":"];
-                if (parts.count >= 2) {
-                    NSInteger hours = [parts[0] integerValue];
-                    NSInteger minutes = [parts[1] integerValue];
-                    secondsFromGMT = -((hours * 3600) + (minutes * 60));
-                }
-            }
-            calculationTimeZone = [NSTimeZone timeZoneForSecondsFromGMT:secondsFromGMT];
-        }
-    } else {
-        calculationTimeZone = [NSTimeZone localTimeZone];
-    }
+    // Set up timezone - use local timezone as default (timezone parameter removed from interface)
+    NSTimeZone *calculationTimeZone = [NSTimeZone localTimeZone];
     
     NSDateFormatter *outputFormatter = [[NSDateFormatter alloc] init];
     [outputFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssXXXXX"];
@@ -75,8 +49,10 @@ RCT_EXPORT_MODULE()
     // Set method-specific angles
     if ([method isEqualToString:@"ISNA"]) {
         fajrAngle = 15.0; ishaAngle = 15.0;
+        NSLog(@"[Adhan iOS] Using ISNA method: fajr=%.1f°, isha=%.1f°", fajrAngle, ishaAngle);
     } else if ([method isEqualToString:@"MWL"]) {
         fajrAngle = 18.0; ishaAngle = 17.0;
+        NSLog(@"[Adhan iOS] Using MWL method: fajr=%.1f°, isha=%.1f°", fajrAngle, ishaAngle);
     } else if ([method isEqualToString:@"Karachi"]) {
         fajrAngle = 18.0; ishaAngle = 18.0;
     } else if ([method isEqualToString:@"Egypt"]) {
@@ -139,9 +115,12 @@ RCT_EXPORT_MODULE()
     double fajrHourAngle = acos((-sin(fajrAngle * M_PI / 180.0) - sin(latitude * M_PI / 180.0) * sin(P)) / (cos(latitude * M_PI / 180.0) * cos(P))) * 180.0 / M_PI / 15.0;
     double fajr = solarNoon - fajrHourAngle;
     
-    // Calculate Asr (consider Madhab)
-    double asrAltitude = atan(1.0 / (1.0 + tan((90.0 - latitude) * M_PI / 180.0) * tan(P) + ([madhab isEqualToString:@"Hanafi"] ? 2.0 : 1.0))) * 180.0 / M_PI;
-    double asrHourAngle = acos((sin(asrAltitude * M_PI / 180.0) - sin(latitude * M_PI / 180.0) * sin(P)) / (cos(latitude * M_PI / 180.0) * cos(P))) * 180.0 / M_PI / 15.0;
+    // Calculate Asr (consider Madhab) - following adhan-swift methodology
+    double shadowLength = [madhab isEqualToString:@"Hanafi"] ? 2.0 : 1.0;
+    double tangent = fabs((latitude * M_PI / 180.0) - P);
+    double inverse = shadowLength + tan(tangent);
+    double asrAngle = atan(1.0 / inverse);
+    double asrHourAngle = acos((sin(asrAngle) - sin(latitude * M_PI / 180.0) * sin(P)) / (cos(latitude * M_PI / 180.0) * cos(P))) * 180.0 / M_PI / 15.0;
     double asr = solarNoon + asrHourAngle;
     
     // Calculate Isha
@@ -273,7 +252,7 @@ RCT_EXPORT_MODULE()
     
     while ([currentDate compare:endDate] != NSOrderedDescending) {
         NSString *dateIso = [inputFormatter stringFromDate:currentDate];
-        NSString *prayerTimesJson = [self getPrayerTimes:latitude longitude:longitude dateIso:dateIso method:method madhab:madhab timezone:timezone adjustments:adjustments customAngles:customAngles];
+        NSString *prayerTimesJson = [self getPrayerTimes:latitude longitude:longitude dateIso:dateIso method:method madhab:madhab adjustments:adjustments customAngles:customAngles];
         
         // Parse the JSON and add date field
         NSError *error;

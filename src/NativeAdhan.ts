@@ -24,7 +24,6 @@ export interface Spec extends TurboModule {
     dateIso: string,
     method: string,
     madhab?: string,
-    timezone?: string,
     adjustments?: string,
     customAngles?: string
   ): string;

@@ -52,8 +52,10 @@ struct CalculationParameters {
     double ishaInterval;
     int maghribAngle;
     Madhab madhab;
+    PrayerAdjustments adjustments;
+    std::string shafaq;
     
-    CalculationParameters() : fajrAngle(18.0), ishaAngle(17.0), ishaInterval(0), maghribAngle(0), madhab(Madhab::Shafi) {}
+    CalculationParameters() : fajrAngle(18.0), ishaAngle(17.0), ishaInterval(0), maghribAngle(0), madhab(Madhab::Shafi), shafaq("general") {}
 };
 
 CalculationParameters getParameters(CalculationMethod method);

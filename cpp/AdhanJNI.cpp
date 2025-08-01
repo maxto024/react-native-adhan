@@ -1,7 +1,20 @@
 #include <jni.h>
 #include <string>
 #include <sstream>
-#include "AdhanCalculations.h"
+#include <ctime>
+#include <iomanip>
+#include "PrayerTimes.h"
+
+std::string timestampToISOString(long long timestamp) {
+    std::time_t time = static_cast<std::time_t>(timestamp);
+    std::tm* utc_tm = std::gmtime(&time);
+    
+    std::ostringstream oss;
+    oss << std::put_time(utc_tm, "%Y-%m-%dT%H:%M:%S");
+    oss << "Z";
+    
+    return oss.str();
+}
 
 extern "C" {
 
@@ -22,39 +35,24 @@ Java_com_adhan_AdhanModule_calculatePrayerTimesNative(
         const char* dateStr = env->GetStringUTFChars(dateIso, 0);
         const char* methodStr = env->GetStringUTFChars(method, 0);
         const char* madhabStr = madhab ? env->GetStringUTFChars(madhab, 0) : "Shafi";
-        const char* timezoneStr = timezone ? env->GetStringUTFChars(timezone, 0) : "UTC";
-        const char* adjustmentsStr = adjustments ? env->GetStringUTFChars(adjustments, 0) : "";
         
-        // Create coordinates
-        Adhan::Coordinates coordinates(latitude, longitude);
+        auto prayerTimes = getPrayerTimesCpp(latitude, longitude, dateStr, methodStr, madhabStr);
         
-        // Parse date
-        Adhan::DateComponents date = Adhan::parseDate(std::string(dateStr));
-        
-        // Parse calculation parameters
-        Adhan::CalculationParameters params = Adhan::parseMethod(std::string(methodStr));
-        params.madhab = Adhan::parseMadhab(std::string(madhabStr));
-        
-        // Calculate prayer times
-        Adhan::PrayerTimes times = Adhan::PrayerTimes::calculate(coordinates, date, params);
-        
-        // Format as JSON
+        // Format as JSON with proper ISO timestamps
         std::ostringstream json;
         json << "{";
-        json << "\"fajr\":\"" << Adhan::formatDateComponents(times.fajr, std::string(timezoneStr)) << "\",";
-        json << "\"sunrise\":\"" << Adhan::formatDateComponents(times.sunrise, std::string(timezoneStr)) << "\",";
-        json << "\"dhuhr\":\"" << Adhan::formatDateComponents(times.dhuhr, std::string(timezoneStr)) << "\",";
-        json << "\"asr\":\"" << Adhan::formatDateComponents(times.asr, std::string(timezoneStr)) << "\",";
-        json << "\"maghrib\":\"" << Adhan::formatDateComponents(times.maghrib, std::string(timezoneStr)) << "\",";
-        json << "\"isha\":\"" << Adhan::formatDateComponents(times.isha, std::string(timezoneStr)) << "\"";
+        json << "\"fajr\":\"" << timestampToISOString(prayerTimes["fajr"]) << "\",";
+        json << "\"sunrise\":\"" << timestampToISOString(prayerTimes["sunrise"]) << "\",";
+        json << "\"dhuhr\":\"" << timestampToISOString(prayerTimes["dhuhr"]) << "\",";
+        json << "\"asr\":\"" << timestampToISOString(prayerTimes["asr"]) << "\",";
+        json << "\"maghrib\":\"" << timestampToISOString(prayerTimes["maghrib"]) << "\",";
+        json << "\"isha\":\"" << timestampToISOString(prayerTimes["isha"]) << "\"";
         json << "}";
         
         // Clean up
         env->ReleaseStringUTFChars(dateIso, dateStr);
         env->ReleaseStringUTFChars(method, methodStr);
         if (madhab) env->ReleaseStringUTFChars(madhab, madhabStr);
-        if (timezone) env->ReleaseStringUTFChars(timezone, timezoneStr);
-        if (adjustments) env->ReleaseStringUTFChars(adjustments, adjustmentsStr);
         
         return env->NewStringUTF(json.str().c_str());
         
