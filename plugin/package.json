@@ -1,0 +1,31 @@
+{
+  "name": "react-native-adhan-expo-plugin",
+  "version": "1.0.0",
+  "description": "Expo config plugin for react-native-adhan",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "keywords": [
+    "expo",
+    "config-plugin",
+    "react-native",
+    "adhan",
+    "prayer-times",
+    "islamic"
+  ],
+  "author": "react-native-adhan",
+  "license": "MIT",
+  "peerDependencies": {
+    "@expo/config-plugins": "^7.0.0 || ^8.0.0",
+    "@expo/config-types": "^50.0.0 || ^51.0.0"
+  },
+  "devDependencies": {
+    "@expo/config-plugins": "^8.0.0",
+    "@expo/config-types": "^51.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

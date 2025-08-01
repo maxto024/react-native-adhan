@@ -10,6 +10,11 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./plugin": {
+      "source": "./plugin/src/index.ts",
+      "types": "./plugin/build/index.d.ts",
+      "default": "./plugin/build/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -18,6 +23,7 @@
     "android",
     "ios",
     "cpp",
+    "plugin",
     "*.podspec",
     "react-native.config.js",
     "!ios/build",
@@ -36,14 +42,24 @@
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "bob build",
+    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib plugin/build",
+    "prepare": "bob build && yarn build:plugin",
+    "build:plugin": "cd plugin && yarn build",
     "release": "release-it --only-version"
   },
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "expo",
+    "turbo-module",
+    "prayer-times",
+    "islamic",
+    "adhan",
+    "qibla",
+    "muslim",
+    "cpp",
+    "performance"
   ],
   "repository": {
     "type": "git",
