@@ -98,13 +98,19 @@ export interface DateInput {
 
 /**
  * Advanced calculation parameters for prayer times
+ * 
+ * @default method: CalculationMethod.MWL (Muslim World League)
+ * @default madhab: Madhab.Shafi (shadow length = 1.0)
+ * @default rounding: Rounding.Nearest
+ * @default adjustments: All prayers = 0 minutes
+ * @default highLatitudeRule: None (no special rule)
  */
 export interface CalculationParameters {
-  /** Calculation method */
+  /** Calculation method @default CalculationMethod.MWL */
   method: CalculationMethod;
-  /** School of jurisprudence for Asr calculation */
+  /** School of jurisprudence for Asr calculation @default Madhab.Shafi */
   madhab?: Madhab;
-  /** High latitude adjustment rule */
+  /** High latitude adjustment rule @default none */
   highLatitudeRule?: HighLatitudeRule;
   /** Custom fajr angle in degrees (overrides method default) */
   fajrAngle?: number;
@@ -114,9 +120,9 @@ export interface CalculationParameters {
   ishaInterval?: number;
   /** Custom maghrib angle in degrees */
   maghribAngle?: number;
-  /** Minutes to add/subtract from each prayer time */
+  /** Minutes to add/subtract from each prayer time (applied after method adjustments) */
   adjustments?: PrayerAdjustments;
-  /** Rounding method for prayer times */
+  /** Rounding method for prayer times @default Rounding.Nearest */
   rounding?: Rounding;
   /** Timezone identifier (e.g., 'America/New_York') or offset (e.g., '+05:00') */
   timezone?: string;
@@ -124,19 +130,29 @@ export interface CalculationParameters {
 
 /**
  * Individual prayer time adjustments in minutes
+ * 
+ * Note: These are applied IN ADDITION to built-in method adjustments.
+ * Built-in method adjustments (matching adhan-swift):
+ * - MWL, Egyptian, Karachi, ISNA: dhuhr +1min
+ * - Dubai: sunrise -3min, dhuhr +3min, asr +3min, maghrib +3min  
+ * - Moonsighting: dhuhr +5min, maghrib +3min
+ * - Singapore: dhuhr +1min
+ * - Turkey: sunrise -7min, dhuhr +5min, asr +4min, maghrib +7min
+ * 
+ * @default All adjustments: 0 minutes
  */
 export interface PrayerAdjustments {
-  /** Fajr adjustment in minutes */
+  /** Fajr adjustment in minutes @default 0 */
   fajr?: number;
-  /** Sunrise adjustment in minutes */
+  /** Sunrise adjustment in minutes @default 0 */
   sunrise?: number;
-  /** Dhuhr adjustment in minutes */
+  /** Dhuhr adjustment in minutes @default 0 */
   dhuhr?: number;
-  /** Asr adjustment in minutes */
+  /** Asr adjustment in minutes @default 0 */
   asr?: number;
-  /** Maghrib adjustment in minutes */
+  /** Maghrib adjustment in minutes @default 0 */
   maghrib?: number;
-  /** Isha adjustment in minutes */
+  /** Isha adjustment in minutes @default 0 */
   isha?: number;
 }
 

@@ -1,73 +1,199 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, ScrollView } from 'react-native';
+import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   multiply,
   getPrayerTimes,
+  getQiblaDirection,
+  getAvailableMethods,
+  validateCoordinates,
   CalculationMethod,
-  type PrayerTimesResult,
   Madhab,
+  type PrayerTimesResult,
+  type QiblaResult,
+  type MethodInfo,
+  type Coordinates,
+  AdhanErrorCode,
 } from 'react-native-adhan';
 
 const multiplyResult = multiply(3, 7);
 
 export default function App() {
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(
-    null
-  );
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimesResult | null>(null);
+  const [qiblaDirection, setQiblaDirection] = useState<QiblaResult | null>(null);
+  const [methods, setMethods] = useState<MethodInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentMethod, setCurrentMethod] = useState<CalculationMethod>(CalculationMethod.ISNA);
+  const [error, setError] = useState<string | null>(null);
+
+  // Test coordinates: Hopkins, MN
+  const coordinates: Coordinates = {
+    latitude: 44.924054,
+    longitude: -93.41964,
+  };
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Validate coordinates first
+      const validation = validateCoordinates(coordinates);
+      if (!validation.isValid) {
+        throw new Error(`Invalid coordinates: ${validation.errors.join(', ')}`);
+      }
+      
+      // Test prayer times with different parameters
+      const times = await getPrayerTimes({
+        coordinates,
+        parameters: {
+          method: currentMethod,
+          madhab: Madhab.Shafi,
+          timezone: 'America/Chicago',
+          adjustments: {
+            fajr: 2,
+            isha: -1,
+          },
+          // Test custom angles for ISNA method
+          ...(currentMethod === CalculationMethod.ISNA && {
+            fajrAngle: 15.5,
+            ishaAngle: 15.5,
+          }),
+        },
+      });
+      setPrayerTimes(times);
+
+      // Test Qibla direction
+      const qibla = await getQiblaDirection(coordinates);
+      setQiblaDirection(qibla);
+
+      // Get available methods
+      const availableMethods = getAvailableMethods();
+      setMethods(availableMethods);
+
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      setError(err.message || 'Unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPrayerTimes = async () => {
-      try {
-        // Example: Hopkins, MN coordinates
-        const times = await getPrayerTimes({
-          coordinates: {
-            latitude: 11.8251,
-            longitude: 42.5903,
-          },
-          parameters: {
-            method: CalculationMethod.Egypt,
-            madhab: Madhab.Hanafi,
-         //   timezone: 'America/Chicago',
-          },
-        });
-        setPrayerTimes(times);
-      } catch (error) {
-        console.error('Error fetching prayer times:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchAllData();
+  }, [currentMethod]);
 
-    fetchPrayerTimes();
-  }, []);
+  const switchMethod = () => {
+    const methodKeys = Object.values(CalculationMethod);
+    const currentIndex = methodKeys.indexOf(currentMethod);
+    const nextIndex = (currentIndex + 1) % methodKeys.length;
+    setCurrentMethod(methodKeys[nextIndex]);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>React Native Adhan</Text>
+      <Text style={styles.subtitle}>Full Type-Safe Integration Test</Text>
 
-      <Text style={styles.subtitle}>Multiply Test: {multiplyResult}</Text>
+      {/* Module connectivity test */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Module Test</Text>
+        <Text style={styles.testResult}>Multiply 3 × 7 = {multiplyResult}</Text>
+      </View>
 
-      <Text style={styles.subtitle}>Prayer Times (Hopkins)</Text>
-      <Text style={styles.date}>Date: {new Date().toDateString()}</Text>
+      {/* Method switcher */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Calculation Method</Text>
+        <TouchableOpacity style={styles.button} onPress={switchMethod}>
+          <Text style={styles.buttonText}>
+            Current: {currentMethod} (Tap to change)
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      {loading ? (
-        <Text>Loading prayer times...</Text>
-      ) : prayerTimes ? (
-        <View style={styles.timesContainer}>
-          {Object.entries(prayerTimes).map(([prayer, time]) => (
-            <View key={prayer} style={styles.timeRow}>
-              <Text style={styles.prayerName}>
-                {prayer.charAt(0).toUpperCase() + prayer.slice(1)}
-              </Text>
-              <Text style={styles.prayerTime}>
-                {new Date(time).toLocaleTimeString()}
-              </Text>
-            </View>
-          ))}
+      {/* Error display */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
         </View>
+      )}
+
+      {/* Loading state */}
+      {loading ? (
+        <Text style={styles.loading}>Loading data...</Text>
       ) : (
-        <Text>Failed to load prayer times</Text>
+        <>
+          {/* Prayer Times */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Prayer Times (Hopkins, MN)</Text>
+            <Text style={styles.date}>Date: {new Date().toDateString()}</Text>
+            
+            {prayerTimes ? (
+              <View style={styles.timesContainer}>
+                {Object.entries(prayerTimes)
+                  .filter(([key]) => !key.includes('metadata'))
+                  .map(([prayer, time]) => (
+                    <View key={prayer} style={styles.timeRow}>
+                      <Text style={styles.prayerName}>
+                        {prayer.charAt(0).toUpperCase() + prayer.slice(1)}
+                      </Text>
+                      <Text style={styles.prayerTime}>
+                        {new Date(time as string).toLocaleTimeString()}
+                      </Text>
+                    </View>
+                  ))}
+              </View>
+            ) : (
+              <Text style={styles.errorText}>Failed to load prayer times</Text>
+            )}
+          </View>
+
+          {/* Qibla Direction */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Qibla Direction</Text>
+            {qiblaDirection ? (
+              <View style={styles.qiblaContainer}>
+                <Text style={styles.qiblaText}>
+                  Direction: {qiblaDirection.direction.toFixed(1)}°
+                </Text>
+                <Text style={styles.qiblaText}>
+                  Bearing: {qiblaDirection.compassBearing}
+                </Text>
+                <Text style={styles.qiblaText}>
+                  Distance: {qiblaDirection.distance.toFixed(0)} km
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.errorText}>Failed to load Qibla direction</Text>
+            )}
+          </View>
+
+          {/* Available Methods */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Available Methods ({methods.length})</Text>
+            {methods.length > 0 ? (
+              <View style={styles.methodsContainer}>
+                {methods.slice(0, 3).map((method, index) => (
+                  <View key={index} style={styles.methodRow}>
+                    <Text style={styles.methodName}>{method.method}</Text>
+                    <Text style={styles.methodAngles}>
+                      Fajr: {method.fajrAngle}°, Isha: {method.ishaAngle}°
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.testResult}>Using fallback method data</Text>
+            )}
+          </View>
+
+          {/* Validation Test */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Coordinate Validation</Text>
+            <Text style={styles.testResult}>
+              Hopkins coordinates: {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)} ✅
+            </Text>
+          </View>
+        </>
       )}
     </ScrollView>
   );
@@ -76,48 +202,124 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: 20,
+    backgroundColor: '#f8f9fa',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
+    marginBottom: 10,
+    color: '#2c3e50',
+    textAlign: 'center',
   },
   subtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 20,
+    color: '#7f8c8d',
+    textAlign: 'center',
+  },
+  section: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginVertical: 10,
-    color: '#555',
+    marginBottom: 12,
+    color: '#2c3e50',
+  },
+  testResult: {
+    fontSize: 14,
+    color: '#27ae60',
+    fontWeight: '500',
+  },
+  button: {
+    backgroundColor: '#3498db',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: '#ffe6e6',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#e74c3c',
+    fontSize: 14,
+  },
+  loading: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    marginVertical: 20,
   },
   date: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 12,
   },
   timesContainer: {
-    width: '100%',
-    maxWidth: 300,
+    gap: 8,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginVertical: 2,
-    backgroundColor: '#f5f5f5',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#ecf0f1',
     borderRadius: 8,
   },
   prayerName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2c3e50',
   },
   prayerTime: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 14,
+    color: '#34495e',
+    fontWeight: '500',
+  },
+  qiblaContainer: {
+    gap: 6,
+  },
+  qiblaText: {
+    fontSize: 14,
+    color: '#2c3e50',
+  },
+  methodsContainer: {
+    gap: 8,
+  },
+  methodRow: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 6,
+  },
+  methodName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  methodAngles: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    marginTop: 2,
   },
 });

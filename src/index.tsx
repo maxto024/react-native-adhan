@@ -216,21 +216,42 @@ export async function getPrayerTimes(
       dateIso = now.toISOString().split('T')[0] as string;
     }
 
-    // Prepare parameters
-    const method = request.parameters?.method || CalculationMethod.ISNA;
-    const madhab = request.parameters?.madhab || Madhab.Shafi;
+    // Prepare parameters with adhan-swift defaults
+    const method = request.parameters?.method || CalculationMethod.MWL; // Default to Muslim World League like adhan-swift
+    const madhab = request.parameters?.madhab || Madhab.Shafi; // Default to Shafi (shadow length = 1.0)
+    const timezone = request.timezone || request.parameters?.timezone;
     const adjustments = request.parameters?.adjustments
       ? JSON.stringify(request.parameters.adjustments)
       : undefined;
+    
+    // Prepare custom angles if any angle overrides are specified
+    const customAngles = (() => {
+      const angles: any = {};
+      if (request.parameters?.fajrAngle !== undefined) {
+        angles.fajrAngle = request.parameters.fajrAngle;
+      }
+      if (request.parameters?.ishaAngle !== undefined) {
+        angles.ishaAngle = request.parameters.ishaAngle;
+      }
+      if (request.parameters?.ishaInterval !== undefined) {
+        angles.ishaInterval = request.parameters.ishaInterval;
+      }
+      if (request.parameters?.maghribAngle !== undefined) {
+        angles.maghribAngle = request.parameters.maghribAngle;
+      }
+      return Object.keys(angles).length > 0 ? JSON.stringify(angles) : undefined;
+    })();
 
-    // Call TurboModule
+    // Call TurboModule with all parameters
     const resultJson = AdhanTurboModule.getPrayerTimes(
       request.coordinates.latitude,
       request.coordinates.longitude,
       dateIso,
       method,
       madhab,
-      adjustments
+      timezone,
+      adjustments,
+      customAngles
     );
 
     const result: PrayerTimesResult = JSON.parse(resultJson);
@@ -314,11 +335,30 @@ export async function getBulkPrayerTimes(
     );
   }
 
-  const method = request.parameters?.method || CalculationMethod.ISNA;
-  const madhab = request.parameters?.madhab || Madhab.Shafi;
+  const method = request.parameters?.method || CalculationMethod.MWL; // Default to Muslim World League
+  const madhab = request.parameters?.madhab || Madhab.Shafi; // Default to Shafi
+  const timezone = request.timezone || request.parameters?.timezone;
   const adjustments = request.parameters?.adjustments
     ? JSON.stringify(request.parameters.adjustments)
     : undefined;
+  
+  // Prepare custom angles if any angle overrides are specified
+  const customAngles = (() => {
+    const angles: any = {};
+    if (request.parameters?.fajrAngle !== undefined) {
+      angles.fajrAngle = request.parameters.fajrAngle;
+    }
+    if (request.parameters?.ishaAngle !== undefined) {
+      angles.ishaAngle = request.parameters.ishaAngle;
+    }
+    if (request.parameters?.ishaInterval !== undefined) {
+      angles.ishaInterval = request.parameters.ishaInterval;
+    }
+    if (request.parameters?.maghribAngle !== undefined) {
+      angles.maghribAngle = request.parameters.maghribAngle;
+    }
+    return Object.keys(angles).length > 0 ? JSON.stringify(angles) : undefined;
+  })();
 
   try {
     const resultJson = AdhanTurboModule.getBulkPrayerTimes(
@@ -328,7 +368,9 @@ export async function getBulkPrayerTimes(
       endDateStr,
       method,
       madhab,
-      adjustments
+      timezone,
+      adjustments,
+      customAngles
     );
 
     const prayerTimes: Array<PrayerTimesResult & { date: string }> =
