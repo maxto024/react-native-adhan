@@ -128,6 +128,10 @@ RCT_REMAP_METHOD(validateCoordinates,
     resolve(@(isValid));
 }
 
+RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods) {
+    return [impl getCalculationMethods];
+}
+
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getMethodParameters:(NSString *)method) {
     NSDictionary *result = [impl getMethodParameters:method];
     return result ?: @{};
