@@ -45,7 +45,28 @@ android.iml
 #
 example/ios/Pods
 
+# Environment files
 .env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# Claude AI and AI tools
+.claude/
+.claude_history
+.anthropic/
+claude_conversation.json
+.ai_context/
+.ai_session/
+.cursor/
+.cursor-*
+.aider*
+.copilot*
+.github-copilot*
+*.ai_context
+*.claude_history
 
 # Ruby
 example/vendor/
@@ -86,4 +107,45 @@ android/generated
 
 # React Native Nitro Modules
 nitrogen/
+
+# Temporary files and logs
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.temp/
+.tmp/
+
+# IDE and Editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Package manager lock files (keep yarn.lock but ignore npm alternatives)
+package-lock.json
+pnpm-lock.yaml
+
+# Testing coverage
+coverage/
+.nyc_output/
+.coverage
+htmlcov/
+
+# Documentation build
+docs/_build/
+site/
+
+# Misc
+.cache/
+.parcel-cache/
 
