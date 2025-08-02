@@ -27,15 +27,6 @@ public class AdhanImpl: NSObject, RCTBridgeModule {
     }
   }
 
-  // Legacy alias for old selector name
-  @objc(validateCoordinates:resolve:reject:)
-  public func validateCoordinates(_ coordinates: NSDictionary,
-                                  resolve: @escaping RCTPromiseResolveBlock,
-                                  reject: @escaping RCTPromiseRejectBlock) {
-    // Forward to the new implementation
-    validateCoordinates(coordinates, resolver: resolve, rejecter: reject)
-  }
-
   @objc(calculatePrayerTimes:dateComponents:calculationParameters:resolver:rejecter:)
   public func calculatePrayerTimes(
     _ coordinates: NSDictionary,
