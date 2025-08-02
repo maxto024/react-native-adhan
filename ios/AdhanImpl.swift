@@ -218,7 +218,7 @@ public class AdhanImpl: NSObject {
         }
         
         let params = CalculationParameters(method: calculationMethod)
-        let result = [
+        let result: [String: Any] = [
             "method": method,
             "fajrAngle": params.fajrAngle,
             "ishaAngle": params.ishaAngle,
