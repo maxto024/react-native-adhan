@@ -32,6 +32,14 @@ const DEFAULT_COORDINATES: AdhanCoordinates = {
   longitude: 39.8261818,
 };
 
+function dateComponentsFromDate(date: Date) {
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,  // JS months are 0-based
+    day: date.getDate(),
+  };
+}
+
 export default function App() {
   const [coordinates, setCoordinates] =
     useState<AdhanCoordinates>(DEFAULT_COORDINATES);
@@ -64,7 +72,7 @@ export default function App() {
       }
     };
     fetchData();
-  }, [coordinates, method, madhab, calculateAllData]);
+  }, [coordinates, method, madhab]);
 
   const calculateAllData = async () => {
     setLoading(true);
@@ -99,7 +107,8 @@ export default function App() {
       const current = await getCurrentPrayer(
         coordinates,
         today,
-        calculationParams
+        calculationParams,
+        Date.now()
       );
       setCurrentPrayer(current);
     } catch (error) {
