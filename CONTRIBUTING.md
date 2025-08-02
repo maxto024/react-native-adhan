@@ -1,130 +1,320 @@
-# Contributing
+# Contributing to react-native-adhan
 
-Contributions are always welcome, no matter how large or small!
+We welcome contributions to react-native-adhan! This document provides guidelines for contributing to the project.
 
-We want this community to be friendly and respectful to each other. Please follow it in all your interactions with the project. Before contributing, please read the [code of conduct](./CODE_OF_CONDUCT.md).
+## Development Setup
 
-## Development workflow
+### Prerequisites
 
-This project is a monorepo managed using [Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the following packages:
+- Node.js (>= 14)
+- npm or yarn
+- Xcode (for iOS development)
+- Android Studio (for Android development)
+- CocoaPods (for iOS dependencies)
 
-- The library package in the root directory.
-- An example app in the `example/` directory.
+### Getting Started
 
-To get started with the project, run `yarn` in the root directory to install the required dependencies for each package:
+1. **Fork and clone the repository**
+   ```bash
+   git clone https://github.com/your-username/react-native-adhan.git
+   cd react-native-adhan
+   ```
 
-```sh
-yarn
-```
+2. **Install dependencies**
+   ```bash
+   yarn install
+   ```
 
-> Since the project relies on Yarn workspaces, you cannot use [`npm`](https://github.com/npm/cli) for development.
+3. **Install iOS dependencies**
+   ```bash
+   cd example/ios && pod install && cd ../..
+   ```
 
-The [example app](/example/) demonstrates usage of the library. You need to run it to test any changes you make.
+4. **Run the example app**
+   ```bash
+   # Start Metro bundler
+   yarn example start
+   
+   # In another terminal - run iOS
+   yarn example ios
+   
+   # Or run Android
+   yarn example android
+   ```
 
-It is configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example app. Changes to the library's JavaScript code will be reflected in the example app without a rebuild, but native code changes will require a rebuild of the example app.
+## Development Workflow
 
-If you want to use Android Studio or XCode to edit the native code, you can open the `example/android` or `example/ios` directories respectively in those editors. To edit the Objective-C or Swift files, open `example/ios/AdhanExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-adhan`.
+### Code Quality
 
-To edit the Java or Kotlin files, open `example/android` in Android studio and find the source files at `react-native-adhan` under `Android`.
+Before submitting any code, ensure it passes all quality checks:
 
-You can use various commands from the root directory to work with the project.
-
-To start the packager:
-
-```sh
-yarn example start
-```
-
-To run the example app on Android:
-
-```sh
-yarn example android
-```
-
-To run the example app on iOS:
-
-```sh
-yarn example ios
-```
-
-To confirm that the app is running with the new architecture, you can check the Metro logs for a message like this:
-
-```sh
-Running "AdhanExample" with {"fabric":true,"initialProps":{"concurrentRoot":true},"rootTag":1}
-```
-
-Note the `"fabric":true` and `"concurrentRoot":true` properties.
-
-Make sure your code passes TypeScript and ESLint. Run the following to verify:
-
-```sh
+```bash
+# Type checking
 yarn typecheck
+
+# Linting and formatting
 yarn lint
-```
 
-To fix formatting errors, run the following:
-
-```sh
-yarn lint --fix
-```
-
-Remember to add tests for your change if possible. Run the unit tests by:
-
-```sh
+# Run tests
 yarn test
+
+# Build the library
+yarn prepare
 ```
 
-### Commit message convention
+### Pre-commit Hooks
 
-We follow the [conventional commits specification](https://www.conventionalcommits.org/en) for our commit messages:
+This project uses [Lefthook](https://github.com/evilmartians/lefthook) for pre-commit hooks. The hooks automatically run:
 
-- `fix`: bug fixes, e.g. fix crash due to deprecated method.
-- `feat`: new features, e.g. add new method to the module.
-- `refactor`: code refactor, e.g. migrate from class components to hooks.
-- `docs`: changes into documentation, e.g. add usage example for the module..
-- `test`: adding or updating tests, e.g. add integration tests using detox.
-- `chore`: tooling changes, e.g. change CI config.
+- ESLint on staged TypeScript/JavaScript files
+- TypeScript compilation check
+- Commit message validation (conventional commits format)
 
-Our pre-commit hooks verify that your commit message matches this format when committing.
+### Making Changes
 
-### Linting and tests
+1. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-[ESLint](https://eslint.org/), [Prettier](https://prettier.io/), [TypeScript](https://www.typescriptlang.org/)
+2. **Make your changes**
+   - Follow the existing code style
+   - Add tests for new functionality
+   - Update documentation if needed
 
-We use [TypeScript](https://www.typescriptlang.org/) for type checking, [ESLint](https://eslint.org/) with [Prettier](https://prettier.io/) for linting and formatting the code, and [Jest](https://jestjs.io/) for testing.
+3. **Test your changes**
+   - Run all quality checks: `yarn typecheck && yarn lint && yarn test`
+   - Test on both iOS and Android using the example app
+   - Verify your changes work with different calculation methods
 
-Our pre-commit hooks verify that the linter and tests pass when committing.
+4. **Commit your changes**
+   ```bash
+   git add .
+   git commit -m "feat: add new prayer calculation feature"
+   ```
+   
+   Use [conventional commit](https://www.conventionalcommits.org/) format:
+   - `feat:` - new features
+   - `fix:` - bug fixes
+   - `docs:` - documentation changes
+   - `refactor:` - code refactoring
+   - `test:` - adding tests
+   - `chore:` - maintenance tasks
 
-### Publishing to npm
+## Architecture Guidelines
 
-We use [release-it](https://github.com/release-it/release-it) to make it easier to publish new versions. It handles common tasks like bumping version based on semver, creating tags and releases etc.
+### TurboModule Structure
 
-To publish new versions, run the following:
+This library uses React Native's New Architecture (TurboModules). When making changes:
 
-```sh
-yarn release
+1. **TypeScript Interface** (`src/NativeAdhan.ts`)
+   - Define the TurboModule spec
+   - Include comprehensive JSDoc comments
+   - Use proper TypeScript types
+
+2. **iOS Implementation** (`ios/Adhan.mm`)
+   - Use Objective-C++ for React Native integration
+   - Leverage the vendored Swift Core/ files
+   - Follow existing pattern for parameter conversion
+
+3. **Android Implementation** (`android/src/main/java/com/adhan/AdhanModule.kt`)
+   - Use Kotlin with the adhan-kotlin library
+   - Ensure identical behavior to iOS implementation
+   - Handle errors gracefully
+
+### Code Style Guidelines
+
+#### TypeScript/JavaScript
+- Use TypeScript for all new code
+- Follow existing naming conventions
+- Add JSDoc comments for public APIs
+- Prefer explicit types over `any`
+
+#### iOS (Objective-C++)
+- Follow Apple's coding conventions
+- Use proper error handling with RCTPromiseReject
+- Convert parameters safely with null checks
+- Use the BA-prefixed Swift wrapper classes
+
+#### Android (Kotlin)
+- Follow Kotlin coding conventions
+- Use proper exception handling with promise.reject()
+- Ensure thread safety for async operations
+- Match method signatures exactly with the TypeScript spec
+
+### Testing
+
+- Add unit tests for new functionality
+- Test edge cases and error conditions
+- Verify cross-platform consistency
+- Include integration tests in the example app
+
+## Submitting Changes
+
+### Pull Request Process
+
+1. **Ensure your branch is up to date**
+   ```bash
+   git fetch origin
+   git rebase origin/main
+   ```
+
+2. **Push your changes**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+3. **Create a Pull Request**
+   - Use a clear, descriptive title
+   - Fill out the PR template completely
+   - Reference any related issues
+   - Include screenshots/videos for UI changes
+
+### Pull Request Guidelines
+
+- **Keep PRs focused**: One feature or fix per PR
+- **Write clear descriptions**: Explain what, why, and how
+- **Add tests**: Ensure new code is properly tested
+- **Update documentation**: Keep README and docs current
+- **Follow coding standards**: Pass all linting and type checks
+
+### Pull Request Template
+
+```markdown
+## Description
+Brief description of the changes made.
+
+## Type of Change
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Documentation update
+
+## Testing
+- [ ] Tests pass locally (`yarn test`)
+- [ ] Linting passes (`yarn lint`)
+- [ ] Type checking passes (`yarn typecheck`)
+- [ ] Tested on iOS
+- [ ] Tested on Android
+- [ ] Example app works correctly
+
+## Checklist
+- [ ] My code follows the style guidelines
+- [ ] I have performed a self-review of my code
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
+- [ ] New and existing unit tests pass locally
 ```
 
-### Scripts
+## Code Review Process
 
-The `package.json` file contains various scripts for common tasks:
+### For Contributors
+- Respond to feedback promptly
+- Make requested changes in new commits (don't force push)
+- Ask questions if feedback is unclear
+- Be open to suggestions and improvements
 
-- `yarn`: setup project by installing dependencies.
-- `yarn typecheck`: type-check files with TypeScript.
-- `yarn lint`: lint files with ESLint.
-- `yarn test`: run unit tests with Jest.
-- `yarn example start`: start the Metro server for the example app.
-- `yarn example android`: run the example app on Android.
-- `yarn example ios`: run the example app on iOS.
+### For Reviewers
+- Focus on code quality, correctness, and maintainability
+- Test the changes locally when possible
+- Provide constructive feedback
+- Approve when satisfied with the changes
 
-### Sending a pull request
+## Release Process
 
-> **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
+This project uses automated releases with [release-it](https://github.com/release-it/release-it):
 
-When you're sending a pull request:
+1. Conventional commits determine version bumps
+2. Changelog is auto-generated
+3. Tags and releases are created automatically
+4. npm publishing happens on successful release
 
-- Prefer small pull requests focused on one change.
-- Verify that linters and tests are passing.
-- Review the documentation to make sure it looks good.
-- Follow the pull request template when opening a pull request.
-- For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.
+Only maintainers can trigger releases.
+
+## Reporting Issues
+
+### Bug Reports
+
+When reporting bugs, please include:
+
+- **Environment details**: OS, React Native version, library version
+- **Steps to reproduce**: Clear, numbered steps
+- **Expected behavior**: What should happen
+- **Actual behavior**: What actually happens
+- **Code samples**: Minimal reproducible example
+- **Screenshots/logs**: If applicable
+
+### Feature Requests
+
+For feature requests, please:
+
+- Check if the feature already exists
+- Explain the use case and benefit
+- Provide examples of how it would work
+- Consider if it fits the library's scope
+
+## Getting Help
+
+- **Documentation**: Check the [README](README.md) first
+- **Issues**: Search existing issues before creating new ones
+- **Discussions**: Use GitHub Discussions for questions
+- **Community**: Follow conventional patterns used in the codebase
+
+## Islamic Prayer Time Calculations
+
+This library implements authentic Islamic prayer time calculations. When contributing:
+
+- **Accuracy is paramount**: Prayer times must be calculated correctly
+- **Follow established methods**: Use recognized calculation methods
+- **Cross-platform consistency**: iOS and Android must produce identical results
+- **Respect religious significance**: Handle Islamic concepts appropriately
+
+### Calculation Methods
+
+The library supports multiple calculation methods used by Islamic organizations worldwide:
+
+- Muslim World League
+- Egyptian General Authority
+- University of Islamic Sciences, Karachi
+- Umm al-Qura University, Makkah
+- UAE (Dubai)
+- Moonsighting Committee
+- ISNA (North America)
+- Kuwait, Qatar, Singapore, Turkey
+
+When adding new methods, ensure they:
+- Are based on authentic Islamic jurisprudence
+- Have clear documentation and sources
+- Are tested for accuracy
+- Follow the same parameter structure
+
+### Contributing to Calculations
+
+If you're contributing to calculation logic:
+
+1. **Understand the mathematics**: Prayer times are based on solar calculations
+2. **Verify with authentic sources**: Cross-check with Islamic authorities
+3. **Test extensively**: Use known correct times for validation
+4. **Document sources**: Reference the Islamic jurisprudence used
+
+## Code of Conduct
+
+- Be respectful and inclusive
+- Welcome newcomers and help them learn
+- Focus on the code and technical issues
+- Respect religious and cultural sensitivities
+- Follow GitHub's terms of service
+
+## License
+
+By contributing to react-native-adhan, you agree that your contributions will be licensed under the MIT License.
+
+## Recognition
+
+Contributors will be recognized in:
+- The project's README
+- Release notes for significant contributions
+- GitHub's contributor graph
+
+Thank you for contributing to react-native-adhan! 🕌

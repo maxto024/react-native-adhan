@@ -190,39 +190,298 @@ The library supports all major calculation methods:
 ### Core Functions
 
 #### `calculatePrayerTimes(coordinates, dateComponents, calculationParameters)`
-Calculates prayer times for a specific location and date.
+
+Calculates all six prayer times for a specific location and date.
+
+**Parameters:**
+- `coordinates: AdhanCoordinates` - Location coordinates
+- `dateComponents: AdhanDateComponents` - Date for calculation  
+- `calculationParameters: AdhanCalculationParameters` - Calculation method and settings
+
+**Returns:** `Promise<AdhanPrayerTimes>`
+```typescript
+{
+  fajr: 1640995800000,     // Unix timestamp in milliseconds (UTC)
+  sunrise: 1641002400000,
+  dhuhr: 1641024000000,
+  asr: 1641034800000,
+  maghrib: 1641045600000,
+  isha: 1641052800000
+}
+```
+
+**Example:**
+```typescript
+const prayerTimes = await calculatePrayerTimes(
+  { latitude: 21.4225, longitude: 39.8262 },
+  { year: 2024, month: 1, day: 15 },
+  { method: 'muslimWorldLeague', madhab: 'shafi' }
+);
+```
 
 #### `calculateQibla(coordinates)`
-Calculates Qibla direction from given coordinates.
+
+Calculates the Qibla direction (direction to Kaaba in Makkah) from any location.
+
+**Parameters:**
+- `coordinates: AdhanCoordinates` - Your current location
+
+**Returns:** `Promise<AdhanQibla>`
+```typescript
+{
+  direction: 58.48  // Degrees from True North (0-360°)
+}
+```
+
+**Example:**
+```typescript
+const qibla = await calculateQibla({ latitude: 40.7128, longitude: -74.0060 });
+console.log(`Face ${qibla.direction.toFixed(1)}° from North`);
+```
 
 #### `calculateSunnahTimes(coordinates, dateComponents, calculationParameters)`
-Calculates recommended Islamic times (middle and last third of night).
+
+Calculates recommended Islamic night times for additional prayers and worship.
+
+**Parameters:**
+- `coordinates: AdhanCoordinates` - Location coordinates
+- `dateComponents: AdhanDateComponents` - Date for calculation
+- `calculationParameters: AdhanCalculationParameters` - Calculation settings
+
+**Returns:** `Promise<AdhanSunnahTimes>`
+```typescript
+{
+  middleOfTheNight: 1641000000000,     // Unix timestamp in milliseconds (UTC)
+  lastThirdOfTheNight: 1641008000000   // Unix timestamp in milliseconds (UTC)
+}
+```
+
+**Example:**
+```typescript
+const sunnahTimes = await calculateSunnahTimes(coordinates, today, params);
+const middleOfNight = new Date(sunnahTimes.middleOfTheNight);
+```
 
 #### `getCurrentPrayer(coordinates, dateComponents, calculationParameters, currentTime?)`
-Determines current and next prayer based on current time.
+
+Determines which prayer is currently active and which prayer comes next.
+
+**Parameters:**
+- `coordinates: AdhanCoordinates` - Location coordinates
+- `dateComponents: AdhanDateComponents` - Date for calculation
+- `calculationParameters: AdhanCalculationParameters` - Calculation settings
+- `currentTime?: number` - Unix timestamp in milliseconds (defaults to current time)
+
+**Returns:** `Promise<AdhanCurrentPrayerInfo>`
+```typescript
+{
+  current: "dhuhr",  // Current prayer: "fajr" | "sunrise" | "dhuhr" | "asr" | "maghrib" | "isha" | "none"
+  next: "asr"        // Next prayer: "fajr" | "sunrise" | "dhuhr" | "asr" | "maghrib" | "isha" | "none"
+}
+```
+
+**Example:**
+```typescript
+const now = Date.now();
+const currentPrayer = await getCurrentPrayer(coordinates, today, params, now);
+console.log(`Current: ${currentPrayer.current}, Next: ${currentPrayer.next}`);
+```
 
 #### `getTimeForPrayer(coordinates, dateComponents, calculationParameters, prayer)`
-Gets the time for a specific prayer.
+
+Gets the exact time for a specific prayer.
+
+**Parameters:**
+- `coordinates: AdhanCoordinates` - Location coordinates
+- `dateComponents: AdhanDateComponents` - Date for calculation
+- `calculationParameters: AdhanCalculationParameters` - Calculation settings
+- `prayer: string` - Prayer name: "fajr" | "sunrise" | "dhuhr" | "asr" | "maghrib" | "isha"
+
+**Returns:** `Promise<number | null>`
+```typescript
+1641024000000  // Unix timestamp in milliseconds (UTC), or null if invalid prayer name
+```
+
+**Example:**
+```typescript
+const dhuhrTime = await getTimeForPrayer(coordinates, today, params, "dhuhr");
+if (dhuhrTime) {
+  console.log("Dhuhr time:", new Date(dhuhrTime).toLocaleTimeString());
+}
+```
+
+#### `calculatePrayerTimesRange(coordinates, startDate, endDate, calculationParameters)`
+
+Calculates prayer times for multiple consecutive days (bulk calculation).
+
+**Parameters:**
+- `coordinates: AdhanCoordinates` - Location coordinates
+- `startDate: AdhanDateComponents` - Start date
+- `endDate: AdhanDateComponents` - End date (inclusive)
+- `calculationParameters: AdhanCalculationParameters` - Calculation settings
+
+**Returns:** `Promise<Array<{ date: AdhanDateComponents; prayerTimes: AdhanPrayerTimes }>>`
+```typescript
+[
+  {
+    date: { year: 2024, month: 1, day: 15 },
+    prayerTimes: { fajr: 1640995800000, sunrise: 1641002400000, ... }
+  },
+  {
+    date: { year: 2024, month: 1, day: 16 },
+    prayerTimes: { fajr: 1641082200000, sunrise: 1641088800000, ... }
+  }
+  // ... more days
+]
+```
+
+**Example:**
+```typescript
+const startDate = dateComponentsFromDate(new Date());
+const endDate = dateComponentsFromDate(new Date(Date.now() + 7*24*60*60*1000));
+const weeklyTimes = await calculatePrayerTimesRange(coordinates, startDate, endDate, params);
+```
 
 ### Utility Functions
 
-#### `validateCoordinates(coordinates)`
-Validates if coordinates are within valid ranges.
-
 #### `getCalculationMethods()`
-Returns array of all available calculation methods with descriptions.
+
+Returns detailed information about all available calculation methods.
+
+**Returns:** `AdhanCalculationMethodInfo[]`
+```typescript
+[
+  {
+    name: "muslimWorldLeague",
+    displayName: "Muslim World League", 
+    fajrAngle: 18.0,
+    ishaAngle: 17.0,
+    ishaInterval: 0,
+    description: "Standard Fajr time with an angle of 18°. Earlier Isha time with an angle of 17°."
+  },
+  // ... more methods
+]
+```
+
+**Example:**
+```typescript
+const methods = getCalculationMethods();
+methods.forEach(method => {
+  console.log(`${method.displayName}: ${method.description}`);
+});
+```
 
 #### `getMethodParameters(method)`
+
 Gets default parameters for a specific calculation method.
 
+**Parameters:**
+- `method: string` - Method name (e.g., "muslimWorldLeague")
+
+**Returns:** `Promise<AdhanCalculationParameters>`
+```typescript
+{
+  method: "muslimWorldLeague",
+  fajrAngle: 18.0,
+  ishaAngle: 17.0,
+  ishaInterval: 0,
+  madhab: "shafi",
+  rounding: "nearest",
+  shafaq: "general"
+}
+```
+
+**Example:**
+```typescript
+const params = await getMethodParameters("egyptianGeneralAuthority");
+console.log(`Fajr angle: ${params.fajrAngle}°`);
+```
+
+#### `getLibraryInfo()`
+
+Returns information about the native library versions and platform.
+
+**Returns:** `Object`
+```typescript
+{
+  version: "2.0.0",
+  swiftLibraryVersion: "2.0.0",    // iOS only
+  kotlinLibraryVersion: "2.0.0",  // Android only
+  platform: "iOS" | "Android"
+}
+```
+
+### Helper Functions
+
 #### `dateComponentsFromDate(date)`
-Converts JavaScript Date to date components format.
+
+Converts a JavaScript Date object to the date components format required by the library.
+
+**Parameters:**
+- `date: Date` - JavaScript Date object
+
+**Returns:** `AdhanDateComponents`
+```typescript
+{
+  year: 2024,
+  month: 1,    // 1-indexed (January = 1)
+  day: 15
+}
+```
+
+**Example:**
+```typescript
+const today = dateComponentsFromDate(new Date());
+const tomorrow = dateComponentsFromDate(new Date(Date.now() + 24*60*60*1000));
+```
 
 #### `timestampToDate(timestamp)`
-Converts Unix timestamp to JavaScript Date.
+
+Converts a Unix timestamp (milliseconds) to a JavaScript Date object.
+
+**Parameters:**
+- `timestamp: number` - Unix timestamp in milliseconds
+
+**Returns:** `Date`
+
+**Example:**
+```typescript
+const prayerTimes = await calculatePrayerTimes(coordinates, today, params);
+const fajrDate = timestampToDate(prayerTimes.fajr);
+console.log("Fajr time:", fajrDate.toLocaleTimeString());
+```
 
 #### `prayerTimesToDates(prayerTimes)`
-Converts prayer times object to JavaScript Date objects.
+
+Converts an entire prayer times object to JavaScript Date objects for easy handling.
+
+**Parameters:**
+- `prayerTimes: AdhanPrayerTimes` - Prayer times with timestamps
+
+**Returns:** `Object with Date values`
+```typescript
+{
+  fajr: Date,
+  sunrise: Date,
+  dhuhr: Date,
+  asr: Date,
+  maghrib: Date,
+  isha: Date
+}
+```
+
+**Example:**
+```typescript
+const prayerTimes = await calculatePrayerTimes(coordinates, today, params);
+const prayerDates = prayerTimesToDates(prayerTimes);
+
+console.log("Today's Prayer Times:");
+console.log("Fajr:", prayerDates.fajr.toLocaleTimeString());
+console.log("Dhuhr:", prayerDates.dhuhr.toLocaleTimeString());
+console.log("Asr:", prayerDates.asr.toLocaleTimeString());
+console.log("Maghrib:", prayerDates.maghrib.toLocaleTimeString());
+console.log("Isha:", prayerDates.isha.toLocaleTimeString());
+```
 
 ## Type Definitions
 
@@ -301,12 +560,37 @@ Both libraries implement the same high-precision astronomical algorithms from "A
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
 
+## Issues and Support
+
+- **Bug Reports**: [GitHub Issues](https://github.com/maxto024/react-native-adhan/issues)
+- **Feature Requests**: [GitHub Issues](https://github.com/maxto024/react-native-adhan/issues)
+- **Documentation**: [GitHub Repository](https://github.com/maxto024/react-native-adhan)
+
+## Author
+
+**Mohamed Elmi Hassan**
+- GitHub: [@maxto024](https://github.com/maxto024)
+- Email: maxto024@gmail.com
+
+## Acknowledgments
+
+This library is built on top of the excellent work from:
+- [Batoul Apps](https://github.com/batoulapps) for the original [adhan-swift](https://github.com/batoulapps/adhan-swift) and [adhan-kotlin](https://github.com/batoulapps/adhan-kotlin) libraries
+- The Islamic Society of North America (ISNA) and other Islamic organizations for calculation method standards
+- The open-source community for React Native and Islamic software development
+
 ## License
 
-MIT
+MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Repository
+
+- **GitHub**: [maxto024/react-native-adhan](https://github.com/maxto024/react-native-adhan)
+- **NPM**: [react-native-adhan](https://www.npmjs.com/package/react-native-adhan)
+- **Homepage**: [https://github.com/maxto024/react-native-adhan](https://github.com/maxto024/react-native-adhan)
 
 ---
 
 Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
 
-Built on top of the official [Adhan](https://github.com/batoulapps/adhan) calculation libraries.
+Built on top of the official [Adhan](https://github.com/batoulapps/adhan) calculation libraries by [Batoul Apps](https://github.com/batoulapps).
