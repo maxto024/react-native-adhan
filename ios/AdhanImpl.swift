@@ -171,7 +171,8 @@ public class AdhanImpl: NSObject {
         return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
     }
     
-    @objc public func getCalculationMethods() -> [[String: Any]] {
+    @objc(getCalculationMethods)
+    public func getCalculationMethods() -> [[String: Any]] {
         return [
             [
                 "name": "muslimWorldLeague",
@@ -208,7 +209,8 @@ public class AdhanImpl: NSObject {
         ]
     }
     
-    @objc public func getMethodParameters(method: String) -> [String: Any]? {
+    @objc(getMethodParameters:)
+    public func getMethodParameters(method: String) -> [String: Any]? {
         guard let calculationMethod = CalculationMethod.fromString(method) else {
             return nil
         }
@@ -226,7 +228,8 @@ public class AdhanImpl: NSObject {
         ]
     }
     
-    @objc public func getLibraryInfo() -> [String: String] {
+    @objc(getLibraryInfo)
+    public func getLibraryInfo() -> [String: String] {
         return [
             "version": "0.1.0",
             "swiftLibraryVersion": "2.0.0",
