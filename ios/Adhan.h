@@ -1,5 +1,6 @@
-#import <AdhanSpec/AdhanSpec.h>
+#import <React/RCTBridgeModule.h>
+#import <React/RCTEventEmitter.h>
 
-@interface Adhan : NSObject <NativeAdhanSpec>
+@interface Adhan : RCTEventEmitter <RCTBridgeModule>
 
 @end

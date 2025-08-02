@@ -128,7 +128,7 @@ export default function App() {
   };
 
   const cycleCalculationMethod = () => {
-    const currentIndex = availableMethods.findIndex(m => m.name === method);
+    const currentIndex = availableMethods.findIndex((m) => m.name === method);
     const nextIndex = (currentIndex + 1) % availableMethods.length;
     setMethod(availableMethods[nextIndex].name);
   };
@@ -138,7 +138,9 @@ export default function App() {
   };
 
   const getCurrentMethodDisplayName = () => {
-    return availableMethods.find(m => m.name === method)?.displayName || 'Unknown';
+    return (
+      availableMethods.find((m) => m.name === method)?.displayName || 'Unknown'
+    );
   };
 
   const getMadhabDisplayName = () => {
@@ -190,10 +192,15 @@ export default function App() {
         {/* Calculation Method */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Calculation Method</Text>
-          <TouchableOpacity style={styles.selectionButton} onPress={cycleCalculationMethod}>
+          <TouchableOpacity
+            style={styles.selectionButton}
+            onPress={cycleCalculationMethod}
+          >
             <View style={styles.selectionContent}>
               <Text style={styles.selectionLabel}>Current Method:</Text>
-              <Text style={styles.selectionValue}>{getCurrentMethodDisplayName()}</Text>
+              <Text style={styles.selectionValue}>
+                {getCurrentMethodDisplayName()}
+              </Text>
               <Text style={styles.tapToChange}>Tap to change</Text>
             </View>
             <Text style={styles.selectionArrow}>→</Text>
@@ -203,10 +210,15 @@ export default function App() {
         {/* Madhab */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Madhab (Asr Calculation)</Text>
-          <TouchableOpacity style={styles.selectionButton} onPress={cycleMadhab}>
+          <TouchableOpacity
+            style={styles.selectionButton}
+            onPress={cycleMadhab}
+          >
             <View style={styles.selectionContent}>
               <Text style={styles.selectionLabel}>Current Madhab:</Text>
-              <Text style={styles.selectionValue}>{getMadhabDisplayName()}</Text>
+              <Text style={styles.selectionValue}>
+                {getMadhabDisplayName()}
+              </Text>
               <Text style={styles.tapToChange}>Tap to change</Text>
             </View>
             <Text style={styles.selectionArrow}>→</Text>
