@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Text,
   View,
@@ -35,7 +35,7 @@ const DEFAULT_COORDINATES: AdhanCoordinates = {
 function dateComponentsFromDate(date: Date) {
   return {
     year: date.getFullYear(),
-    month: date.getMonth() + 1,  // JS months are 0-based
+    month: date.getMonth() + 1, // JS months are 0-based
     day: date.getDate(),
   };
 }
@@ -66,15 +66,15 @@ export default function App() {
   // Calculate all prayer data when coordinates or method changes
   useEffect(() => {
     const fetchData = async () => {
-      const isValid = await validateCoordinates(coordinates);
+      const isValid = validateCoordinates(coordinates);
       if (isValid) {
-        calculateAllData();
+        await calculateAllData();
       }
     };
     fetchData();
-  }, [coordinates, method, madhab]);
+  }, [coordinates, method, madhab, calculateAllData]);
 
-  const calculateAllData = async () => {
+  const calculateAllData = useCallback(async () => {
     setLoading(true);
     try {
       const today = dateComponentsFromDate(new Date());
@@ -116,7 +116,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [coordinates, method, madhab]);
 
   const formatTime = (timestamp: number): string => {
     const date = new Date(timestamp);
@@ -140,7 +140,10 @@ export default function App() {
   const cycleCalculationMethod = () => {
     const currentIndex = availableMethods.findIndex((m) => m.name === method);
     const nextIndex = (currentIndex + 1) % availableMethods.length;
-    setMethod(availableMethods[nextIndex].name);
+    const nextMethod = availableMethods[nextIndex];
+    if (nextMethod) {
+      setMethod(nextMethod.name);
+    }
   };
 
   const cycleMadhab = () => {

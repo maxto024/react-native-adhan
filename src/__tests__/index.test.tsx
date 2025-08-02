@@ -37,7 +37,10 @@ describe('react-native-adhan', () => {
 
   describe('validateCoordinates', () => {
     it('should validate correct coordinates', () => {
-      const result = validateCoordinates({ latitude: 21.4225, longitude: 39.8262 });
+      const result = validateCoordinates({
+        latitude: 21.4225,
+        longitude: 39.8262,
+      });
       expect(result).toBe(true);
     });
 
