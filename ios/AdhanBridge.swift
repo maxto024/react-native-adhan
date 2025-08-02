@@ -115,7 +115,7 @@ public class AdhanBridge: NSObject {
   @objc(getMethodParameters:)
   public func getMethodParameters(_ method: NSString) -> [String: Any]? {
     guard let calculationMethod = CalculationMethod.fromString(method as String) else { return nil }
-    let params = CalculationParameters(method: calculationMethod)
+    let params = calculationMethod.params
     return ["method": method, "fajrAngle": params.fajrAngle, "ishaAngle": params.ishaAngle, "ishaInterval": params.ishaInterval, "madhab": params.madhab.rawValue, "highLatitudeRule": params.highLatitudeRule.rawValue, "rounding": params.rounding.rawValue, "shafaq": params.shafaq.rawValue]
   }
 
@@ -178,7 +178,11 @@ public class AdhanBridge: NSObject {
       let currentDate = Date(timeIntervalSince1970: currentTimeMs / 1000)
       let currentPrayer = prayerTimes.currentPrayer(at: currentDate)
       let nextPrayer = prayerTimes.nextPrayer(at: currentDate)
-      return ["current": currentPrayer?.rawValue ?? "none", "next": nextPrayer?.rawValue ?? "none"]
+
+      return [
+          "current": currentPrayer?.stringValue ?? "none",
+          "next": nextPrayer?.stringValue ?? "none"
+      ]
   }
 
   private func getTimeForPrayerSync(_ coordinates: NSDictionary, dateComponents: NSDictionary, calculationParameters: NSDictionary, prayer: String) -> NSNumber? {
@@ -191,7 +195,9 @@ public class AdhanBridge: NSObject {
       adhanDateComponents.day = day
       let adhanParams = getCalculationParameters(from: calculationParameters as! [String : Any])
       guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams),
-            let prayerEnum = Prayer(rawValue: prayer) else { return nil }
+            let prayerEnum = Prayer(string: prayer) else {
+          return nil
+      }
       let time = prayerTimes.time(for: prayerEnum)
       return NSNumber(value: time.timeIntervalSince1970 * 1000)
   }
@@ -202,6 +208,31 @@ public class AdhanBridge: NSObject {
 }
 
 // MARK: - String to Enum Helpers
+
+extension Prayer {
+    init?(string: String) {
+        switch string.lowercased() {
+        case "fajr": self = .fajr
+        case "sunrise": self = .sunrise
+        case "dhuhr": self = .dhuhr
+        case "asr": self = .asr
+        case "maghrib": self = .maghrib
+        case "isha": self = .isha
+        default: return nil
+        }
+    }
+
+    var stringValue: String {
+        switch self {
+        case .fajr: return "fajr"
+        case .sunrise: return "sunrise"
+        case .dhuhr: return "dhuhr"
+        case .asr: return "asr"
+        case .maghrib: return "maghrib"
+        case .isha: return "isha"
+        }
+    }
+}
 
 extension CalculationMethod {
     static func fromString(_ string: String) -> CalculationMethod? {
