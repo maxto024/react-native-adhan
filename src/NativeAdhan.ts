@@ -167,7 +167,9 @@ export interface Spec extends TurboModule {
     startDate: AdhanDateComponents,
     endDate: AdhanDateComponents,
     calculationParameters: AdhanCalculationParameters
-  ): Promise<Array<{ date: AdhanDateComponents; prayerTimes: AdhanPrayerTimes }>>;
+  ): Promise<
+    Array<{ date: AdhanDateComponents; prayerTimes: AdhanPrayerTimes }>
+  >;
 
   /**
    * Get library version and metadata

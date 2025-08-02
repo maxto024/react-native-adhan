@@ -16,10 +16,7 @@ import {
   calculateSunnahTimes,
   getCurrentPrayer,
   getCalculationMethods,
-  getMethodParameters,
   validateCoordinates,
-  dateComponentsFromDate,
-  prayerTimesToDates,
   CalculationMethod,
   Madhab,
   type AdhanCoordinates,
@@ -60,10 +57,14 @@ export default function App() {
 
   // Calculate all prayer data when coordinates or method changes
   useEffect(() => {
-    if (validateCoordinates(coordinates)) {
-      calculateAllData();
-    }
-  }, [coordinates, method, madhab]);
+    const fetchData = async () => {
+      const isValid = await validateCoordinates(coordinates);
+      if (isValid) {
+        calculateAllData();
+      }
+    };
+    fetchData();
+  }, [coordinates, method, madhab, calculateAllData]);
 
   const calculateAllData = async () => {
     setLoading(true);

@@ -38,9 +38,12 @@ describe('react-native-adhan', () => {
   describe('validateCoordinates', () => {
     it('should validate correct coordinates', async () => {
       mockNativeAdhan.validateCoordinates.mockResolvedValue(true);
-      
-      const result = await validateCoordinates({ latitude: 21.4225, longitude: 39.8262 });
-      
+
+      const result = await validateCoordinates({
+        latitude: 21.4225,
+        longitude: 39.8262,
+      });
+
       expect(result).toBe(true);
       expect(mockNativeAdhan.validateCoordinates).toHaveBeenCalledWith({
         latitude: 21.4225,
@@ -50,9 +53,12 @@ describe('react-native-adhan', () => {
 
     it('should invalidate incorrect coordinates', async () => {
       mockNativeAdhan.validateCoordinates.mockResolvedValue(false);
-      
-      const result = await validateCoordinates({ latitude: 100, longitude: 200 });
-      
+
+      const result = await validateCoordinates({
+        latitude: 100,
+        longitude: 200,
+      });
+
       expect(result).toBe(false);
     });
   });
@@ -72,9 +78,15 @@ describe('react-native-adhan', () => {
 
       const coordinates = { latitude: 21.4225, longitude: 39.8262 };
       const dateComponents = { year: 2022, month: 1, day: 1 };
-      const calculationParameters = { method: CalculationMethod.MUSLIM_WORLD_LEAGUE };
+      const calculationParameters = {
+        method: CalculationMethod.MUSLIM_WORLD_LEAGUE,
+      };
 
-      const result = await calculatePrayerTimes(coordinates, dateComponents, calculationParameters);
+      const result = await calculatePrayerTimes(
+        coordinates,
+        dateComponents,
+        calculationParameters
+      );
 
       expect(result).toEqual(mockPrayerTimes);
       expect(mockNativeAdhan.calculatePrayerTimes).toHaveBeenCalledWith(
@@ -85,11 +97,15 @@ describe('react-native-adhan', () => {
     });
 
     it('should handle calculation errors', async () => {
-      mockNativeAdhan.calculatePrayerTimes.mockRejectedValue(new Error('Calculation failed'));
+      mockNativeAdhan.calculatePrayerTimes.mockRejectedValue(
+        new Error('Calculation failed')
+      );
 
       const coordinates = { latitude: 21.4225, longitude: 39.8262 };
       const dateComponents = { year: 2022, month: 1, day: 1 };
-      const calculationParameters = { method: CalculationMethod.MUSLIM_WORLD_LEAGUE };
+      const calculationParameters = {
+        method: CalculationMethod.MUSLIM_WORLD_LEAGUE,
+      };
 
       await expect(
         calculatePrayerTimes(coordinates, dateComponents, calculationParameters)
@@ -102,7 +118,7 @@ describe('react-native-adhan', () => {
       const mockQibla = { direction: 158.58 };
       mockNativeAdhan.calculateQibla.mockResolvedValue(mockQibla);
 
-      const coordinates = { latitude: 40.7128, longitude: -74.0060 }; // New York
+      const coordinates = { latitude: 40.7128, longitude: -74.006 }; // New York
 
       const result = await calculateQibla(coordinates);
 
@@ -122,9 +138,15 @@ describe('react-native-adhan', () => {
 
       const coordinates = { latitude: 21.4225, longitude: 39.8262 };
       const dateComponents = { year: 2022, month: 1, day: 1 };
-      const calculationParameters = { method: CalculationMethod.MUSLIM_WORLD_LEAGUE };
+      const calculationParameters = {
+        method: CalculationMethod.MUSLIM_WORLD_LEAGUE,
+      };
 
-      const result = await calculateSunnahTimes(coordinates, dateComponents, calculationParameters);
+      const result = await calculateSunnahTimes(
+        coordinates,
+        dateComponents,
+        calculationParameters
+      );
 
       expect(result).toEqual(mockSunnahTimes);
       expect(mockNativeAdhan.calculateSunnahTimes).toHaveBeenCalledWith(
@@ -142,9 +164,15 @@ describe('react-native-adhan', () => {
 
       const coordinates = { latitude: 21.4225, longitude: 39.8262 };
       const dateComponents = { year: 2022, month: 1, day: 1 };
-      const calculationParameters = { method: CalculationMethod.MUSLIM_WORLD_LEAGUE };
+      const calculationParameters = {
+        method: CalculationMethod.MUSLIM_WORLD_LEAGUE,
+      };
 
-      const result = await getCurrentPrayer(coordinates, dateComponents, calculationParameters);
+      const result = await getCurrentPrayer(
+        coordinates,
+        dateComponents,
+        calculationParameters
+      );
 
       expect(result).toEqual(mockCurrentPrayer);
       expect(mockNativeAdhan.getCurrentPrayer).toHaveBeenCalledWith(
@@ -161,10 +189,17 @@ describe('react-native-adhan', () => {
 
       const coordinates = { latitude: 21.4225, longitude: 39.8262 };
       const dateComponents = { year: 2022, month: 1, day: 1 };
-      const calculationParameters = { method: CalculationMethod.MUSLIM_WORLD_LEAGUE };
+      const calculationParameters = {
+        method: CalculationMethod.MUSLIM_WORLD_LEAGUE,
+      };
       const customTime = 1641000000000;
 
-      const result = await getCurrentPrayer(coordinates, dateComponents, calculationParameters, customTime);
+      const result = await getCurrentPrayer(
+        coordinates,
+        dateComponents,
+        calculationParameters,
+        customTime
+      );
 
       expect(result).toEqual(mockCurrentPrayer);
       expect(mockNativeAdhan.getCurrentPrayer).toHaveBeenCalledWith(
@@ -214,7 +249,9 @@ describe('react-native-adhan', () => {
       const result = getMethodParameters('muslimWorldLeague');
 
       expect(result).toEqual(mockParams);
-      expect(mockNativeAdhan.getMethodParameters).toHaveBeenCalledWith('muslimWorldLeague');
+      expect(mockNativeAdhan.getMethodParameters).toHaveBeenCalledWith(
+        'muslimWorldLeague'
+      );
     });
 
     it('should return method parameters for enum input', () => {
@@ -232,7 +269,9 @@ describe('react-native-adhan', () => {
       const result = getMethodParameters(CalculationMethod.EGYPTIAN);
 
       expect(result).toEqual(mockParams);
-      expect(mockNativeAdhan.getMethodParameters).toHaveBeenCalledWith('egyptian');
+      expect(mockNativeAdhan.getMethodParameters).toHaveBeenCalledWith(
+        'egyptian'
+      );
     });
   });
 
@@ -316,7 +355,9 @@ describe('react-native-adhan', () => {
       expect(CalculationMethod.KARACHI).toBe('karachi');
       expect(CalculationMethod.UMM_AL_QURA).toBe('ummAlQura');
       expect(CalculationMethod.DUBAI).toBe('dubai');
-      expect(CalculationMethod.MOON_SIGHTING_COMMITTEE).toBe('moonsightingCommittee');
+      expect(CalculationMethod.MOON_SIGHTING_COMMITTEE).toBe(
+        'moonsightingCommittee'
+      );
       expect(CalculationMethod.NORTH_AMERICA).toBe('northAmerica');
       expect(CalculationMethod.KUWAIT).toBe('kuwait');
       expect(CalculationMethod.QATAR).toBe('qatar');
@@ -334,11 +375,15 @@ describe('react-native-adhan', () => {
 
   describe('error handling', () => {
     it('should handle native module errors gracefully', async () => {
-      mockNativeAdhan.calculatePrayerTimes.mockRejectedValue(new Error('Native module error'));
+      mockNativeAdhan.calculatePrayerTimes.mockRejectedValue(
+        new Error('Native module error')
+      );
 
       const coordinates = { latitude: 21.4225, longitude: 39.8262 };
       const dateComponents = { year: 2022, month: 1, day: 1 };
-      const calculationParameters = { method: CalculationMethod.MUSLIM_WORLD_LEAGUE };
+      const calculationParameters = {
+        method: CalculationMethod.MUSLIM_WORLD_LEAGUE,
+      };
 
       await expect(
         calculatePrayerTimes(coordinates, dateComponents, calculationParameters)
@@ -362,7 +407,7 @@ describe('react-native-adhan', () => {
 
       const makkahCoordinates = { latitude: 21.4225241, longitude: 39.8261818 };
       const isValid = validateCoordinates(makkahCoordinates);
-      
+
       expect(isValid).toBe(true);
 
       const result = await calculatePrayerTimes(
@@ -387,13 +432,13 @@ describe('react-native-adhan', () => {
       mockNativeAdhan.calculatePrayerTimes.mockResolvedValue(mockPrayerTimes);
 
       const londonCoordinates = { latitude: 51.5074, longitude: -0.1278 };
-      
+
       const result = await calculatePrayerTimes(
         londonCoordinates,
         { year: 2022, month: 6, day: 15 }, // Summer solstice
-        { 
+        {
           method: CalculationMethod.MOON_SIGHTING_COMMITTEE,
-          highLatitudeRule: 'seventhOfTheNight'
+          highLatitudeRule: 'seventhOfTheNight',
         }
       );
 
@@ -401,9 +446,9 @@ describe('react-native-adhan', () => {
       expect(mockNativeAdhan.calculatePrayerTimes).toHaveBeenCalledWith(
         londonCoordinates,
         { year: 2022, month: 6, day: 15 },
-        { 
+        {
           method: CalculationMethod.MOON_SIGHTING_COMMITTEE,
-          highLatitudeRule: 'seventhOfTheNight'
+          highLatitudeRule: 'seventhOfTheNight',
         }
       );
     });
