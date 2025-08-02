@@ -1,12 +1,11 @@
-// AdhanModule.swift
+// AdhanImpl.swift
 
 import Foundation
 import React
 
-@objc(AdhanModule)
-public class AdhanModule: NSObject {
+@objcMembers
+public class AdhanImpl: NSObject {
 
-    @objc(calculatePrayerTimes:dateComponents:calculationParameters:resolver:rejecter:)
     func calculatePrayerTimes(
         coordinates: [String: Double],
         dateComponents: [String: Int],
@@ -49,7 +48,6 @@ public class AdhanModule: NSObject {
         resolver(result)
     }
 
-    @objc(calculateQibla:resolver:rejecter:)
     func calculateQibla(
         coordinates: [String: Double],
         resolver: @escaping RCTPromiseResolveBlock,
@@ -66,7 +64,6 @@ public class AdhanModule: NSObject {
         resolver(["direction": qibla.direction])
     }
 
-    @objc(calculateSunnahTimes:dateComponents:calculationParameters:resolver:rejecter:)
     func calculateSunnahTimes(
         coordinates: [String: Double],
         dateComponents: [String: Int],
@@ -106,7 +103,6 @@ public class AdhanModule: NSObject {
         resolver(result)
     }
 
-    @objc(getCurrentPrayer:dateComponents:calculationParameters:currentTime:resolver:rejecter:)
     func getCurrentPrayer(
         coordinates: [String: Double],
         dateComponents: [String: Int],
@@ -150,7 +146,6 @@ public class AdhanModule: NSObject {
         resolver(result)
     }
 
-    @objc(getTimeForPrayer:dateComponents:calculationParameters:prayer:resolver:rejecter:)
     func getTimeForPrayer(
         coordinates: [String: Double],
         dateComponents: [String: Int],
@@ -191,7 +186,6 @@ public class AdhanModule: NSObject {
         resolver(time.timeIntervalSince1970 * 1000)
     }
 
-    @objc(validateCoordinates:resolver:rejecter:)
     func validateCoordinates(
         coordinates: [String: Double],
         resolver: @escaping RCTPromiseResolveBlock,
@@ -206,7 +200,6 @@ public class AdhanModule: NSObject {
         resolver(adhanCoordinates.latitude >= -90 && adhanCoordinates.latitude <= 90 && adhanCoordinates.longitude >= -180 && adhanCoordinates.longitude <= 180)
     }
 
-    @objc(getCalculationMethods:rejecter:)
     func getCalculationMethods(
         resolver: @escaping RCTPromiseResolveBlock,
         rejecter: @escaping RCTPromiseRejectBlock
@@ -320,7 +313,6 @@ public class AdhanModule: NSObject {
         resolver(methods)
     }
 
-    @objc(getMethodParameters:resolver:rejecter:)
     func getMethodParameters(
         method: String,
         resolver: @escaping RCTPromiseResolveBlock,
@@ -361,7 +353,6 @@ public class AdhanModule: NSObject {
         resolver(result)
     }
 
-    @objc(calculatePrayerTimesRange:startDate:endDate:calculationParameters:resolver:rejecter:)
     func calculatePrayerTimesRange(
         coordinates: [String: Double],
         startDate: [String: Int],
@@ -437,7 +428,6 @@ public class AdhanModule: NSObject {
         resolver(results)
     }
 
-    @objc(getLibraryInfo:rejecter:)
     func getLibraryInfo(
         resolver: @escaping RCTPromiseResolveBlock,
         rejecter: @escaping RCTPromiseRejectBlock
