@@ -27,6 +27,8 @@ import Foundation
 
 public typealias Minute = Int
 
+
+
 internal extension Minute {
     var timeInterval: TimeInterval {
         return TimeInterval(self * 60)

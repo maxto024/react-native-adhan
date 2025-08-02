@@ -31,39 +31,30 @@ import Foundation
 public struct CalculationParameters: Codable, Equatable {
     public var method: CalculationMethod = .other
     public var fajrAngle: Double
-    public var maghribAngle: Double?
     public var ishaAngle: Double
     public var ishaInterval: Minute = 0
-    public var madhab: Madhab = .shafi
-    public var highLatitudeRule: HighLatitudeRule? = nil
+    public var maghribAngle: Double?
     public var adjustments: PrayerAdjustments = PrayerAdjustments()
-    public var rounding: Rounding = .nearest
+    public var highLatitudeRule: HighLatitudeRule = .middleOfTheNight
     public var shafaq: Shafaq = .general
+    public var madhab: Madhab = .shafi
+    public var rounding: Rounding = .nearest
     var methodAdjustments: PrayerAdjustments = PrayerAdjustments()
 
-    init(fajrAngle: Double, ishaAngle: Double) {
+    public init(fajrAngle: Double, ishaAngle: Double) {
         self.fajrAngle = fajrAngle
         self.ishaAngle = ishaAngle
     }
 
-    init(fajrAngle: Double, ishaInterval: Minute) {
-        self.init(fajrAngle: fajrAngle, ishaAngle: 0)
-        self.ishaInterval = ishaInterval
-    }
-
-    init(fajrAngle: Double, ishaAngle: Double, method: CalculationMethod) {
-        self.init(fajrAngle: fajrAngle, ishaAngle: ishaAngle)
+    public init(method: CalculationMethod) {
         self.method = method
-    }
-
-    init(fajrAngle: Double, ishaInterval: Minute, method: CalculationMethod) {
-        self.init(fajrAngle: fajrAngle, ishaInterval: ishaInterval)
-        self.method = method
-    }
-    
-    init(fajrAngle: Double, maghribAngle: Double, ishaAngle: Double, method: CalculationMethod) {
-        self.init(fajrAngle: fajrAngle, ishaAngle: ishaAngle, method: method)
-        self.maghribAngle = maghribAngle
+        let p = method.params
+        self.fajrAngle = p.fajrAngle
+        self.ishaAngle = p.ishaAngle
+        self.ishaInterval = p.ishaInterval
+        self.maghribAngle = p.maghribAngle
+        self.methodAdjustments = p.methodAdjustments
+        self.rounding = p.rounding
     }
 
     func nightPortions(using coordinates: Coordinates) -> (fajr: Double, isha: Double) {
@@ -79,3 +70,4 @@ public struct CalculationParameters: Codable, Equatable {
         }
     }
 }
+
