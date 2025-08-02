@@ -1,5 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#import "RNAdhanSpec.h"
+#import "AdhanSpec.h"
 
 @interface Adhan : NSObject <NativeAdhanSpec>
 #else
