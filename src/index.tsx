@@ -156,10 +156,13 @@ export function getTimeForPrayer(
 /**
  * Validate coordinates
  */
-export function validateCoordinates(
-  coordinates: AdhanCoordinates
-): Promise<boolean> {
-  return NativeAdhan.validateCoordinates(coordinates);
+export function validateCoordinates(coordinates: AdhanCoordinates): boolean {
+  return (
+    coordinates.latitude >= -90 &&
+    coordinates.latitude <= 90 &&
+    coordinates.longitude >= -180 &&
+    coordinates.longitude <= 180
+  );
 }
 
 /**
