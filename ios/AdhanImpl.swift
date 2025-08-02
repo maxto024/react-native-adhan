@@ -160,8 +160,7 @@ public class AdhanImpl: NSObject {
         return NSNumber(value: time.timeIntervalSince1970 * 1000)
     }
     
-    // ✅ FIXED METHOD BELOW
-    @objc public func validateCoordinates(with coordinates: NSDictionary) -> Bool {
+    @objc public func validateCoordinates(coordinates: NSDictionary) -> Bool {
         guard
             let lat = coordinates["latitude"] as? Double,
             let lon = coordinates["longitude"] as? Double

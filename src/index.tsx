@@ -129,7 +129,7 @@ export function getTimeForPrayer(
   calculationParameters: AdhanCalculationParameters,
   prayer: Prayer | string
 ): Promise<number | null> {
-  const prayerName = typeof prayer === 'string' ? prayer : prayer.valueOf();
+  const prayerName = prayer;
   return NativeAdhan.getTimeForPrayer(coordinates, dateComponents, calculationParameters, prayerName);
 }
 
@@ -151,7 +151,7 @@ export function getCalculationMethods(): AdhanCalculationMethodInfo[] {
  * Get default calculation parameters for a method
  */
 export function getMethodParameters(method: CalculationMethod | string): AdhanCalculationParameters {
-  const methodName = typeof method === 'string' ? method : method.valueOf();
+  const methodName = method;
   return NativeAdhan.getMethodParameters(methodName);
 }
 
