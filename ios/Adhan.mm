@@ -64,6 +64,8 @@ static BACalculationParameters *paramsFromDictionary(NSDictionary *dict) {
 
 @implementation Adhan
 
+RCT_EXPORT_MODULE()
+
 - (void)calculatePrayerTimes:(NSDictionary *)coordinates
               dateComponents:(NSDictionary *)dateComponents
        calculationParameters:(NSDictionary *)calculationParameters
