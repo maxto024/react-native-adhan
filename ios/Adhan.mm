@@ -121,11 +121,11 @@ RCT_REMAP_METHOD(getTimeForPrayer,
 }
 
 RCT_REMAP_METHOD(validateCoordinates,
-                 validateCoordinatesWithCoordinates:(NSDictionary *)coordinates
+                 validateCoordinates:(NSDictionary *)coordinates
                  resolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject)
 {
-    [impl validateCoordinatesWithCoordinates:coordinates resolver:resolve rejecter:reject];
+    [impl validateCoordinatesAsync:coordinates resolver:resolve rejecter:reject];
 }
 
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods) {

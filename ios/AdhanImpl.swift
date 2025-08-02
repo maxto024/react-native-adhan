@@ -160,21 +160,20 @@ public class AdhanImpl: NSObject {
         return NSNumber(value: time.timeIntervalSince1970 * 1000)
     }
     
-    @objc(validateCoordinatesWithCoordinates:resolver:rejecter:)
+    private func validateCoordinates(coordinates: NSDictionary) -> Bool {
+      guard let lat = coordinates["latitude"] as? Double,
+            let lon = coordinates["longitude"] as? Double else { return false }
+      return (-90...90).contains(lat) && (-180...180).contains(lon)
+    }
+
+    @objc(validateCoordinatesAsync:resolver:rejecter:)
     public func validateCoordinates(
-      coordinates: NSDictionary,
+      _ coordinates: NSDictionary,
       resolver: RCTPromiseResolveBlock,
       rejecter: RCTPromiseRejectBlock
     ) {
-        guard
-            let lat = coordinates["latitude"] as? Double,
-            let lon = coordinates["longitude"] as? Double
-        else {
-            resolver(false)
-            return
-        }
-        let isValid = lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
-        resolver(isValid)
+      let valid = validateCoordinates(coordinates: coordinates)
+      resolver(valid)
     }
     
     @objc public func getCalculationMethods() -> [[String: Any]] {
