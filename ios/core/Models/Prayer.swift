@@ -1,5 +1,5 @@
 //
-//  Coordinates.swift
+//  Prayer.swift
 //  Adhan
 //
 //  Copyright © 2018 Batoul Apps. All rights reserved.
@@ -25,20 +25,11 @@
 
 import Foundation
 
-public struct Coordinates: Codable, Equatable {
-    public let latitude: Double
-    public let longitude: Double
-
-    public init(latitude: Double, longitude: Double) {
-        self.latitude = latitude
-        self.longitude = longitude
-    }
-    
-    var latitudeAngle: Angle {
-        return Angle(latitude)
-    }
-    
-    var longitudeAngle: Angle {
-        return Angle(longitude)
-    }
+public enum Prayer: CaseIterable {
+    case fajr
+    case sunrise
+    case dhuhr
+    case asr
+    case maghrib
+    case isha
 }

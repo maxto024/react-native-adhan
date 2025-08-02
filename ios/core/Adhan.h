@@ -1,5 +1,5 @@
 //
-//  Prayer.swift
+//  Adhan.h
 //  Adhan
 //
 //  Copyright © 2018 Batoul Apps. All rights reserved.
@@ -23,13 +23,14 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+#import <Foundation/Foundation.h>
 
-public enum Prayer: String, CaseIterable {
-    case fajr
-    case sunrise
-    case dhuhr
-    case asr
-    case maghrib
-    case isha
-}
+//! Project version number for Adhan.
+FOUNDATION_EXPORT double AdhanVersionNumber;
+
+//! Project version string for Adhan.
+FOUNDATION_EXPORT const unsigned char AdhanVersionString[];
+
+// In this header, you should import all the public headers of your framework using statements like #import <Adhan/PublicHeader.h>
+
+

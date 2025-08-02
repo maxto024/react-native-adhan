@@ -130,34 +130,51 @@ public enum CalculationMethod: String, Codable, CaseIterable {
     // Other
     case other
 
-    public var params: (fajrAngle: Double, ishaAngle: Double, ishaInterval: Minute, maghribAngle: Double?, methodAdjustments: PrayerAdjustments, rounding: Rounding) {
+    public var params: CalculationParameters {
         switch(self) {
         case .muslimWorldLeague:
-            return (fajrAngle: 18, ishaAngle: 17, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(dhuhr: 1), rounding: .nearest)
+            var params = CalculationParameters(fajrAngle: 18, ishaAngle: 17, method: self)
+            params.methodAdjustments = PrayerAdjustments(dhuhr: 1)
+            return params
         case .egyptian:
-            return (fajrAngle: 19.5, ishaAngle: 17.5, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(dhuhr: 1), rounding: .nearest)
+            var params = CalculationParameters(fajrAngle: 19.5, ishaAngle: 17.5, method: self)
+            params.methodAdjustments = PrayerAdjustments(dhuhr: 1)
+            return params
         case .karachi:
-            return (fajrAngle: 18, ishaAngle: 18, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(dhuhr: 1), rounding: .nearest)
+            var params = CalculationParameters(fajrAngle: 18, ishaAngle: 18, method: self)
+            params.methodAdjustments = PrayerAdjustments(dhuhr: 1)
+            return params
         case .ummAlQura:
-            return (fajrAngle: 18.5, ishaAngle: 0, ishaInterval: 90, maghribAngle: nil, methodAdjustments: PrayerAdjustments(), rounding: .nearest)
+            return CalculationParameters(fajrAngle: 18.5, ishaInterval: 90, method: self)
         case .dubai:
-            return (fajrAngle: 18.2, ishaAngle: 18.2, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(sunrise: -3, dhuhr: 3, asr: 3, maghrib: 3), rounding: .nearest)
+            var params = CalculationParameters(fajrAngle: 18.2, ishaAngle: 18.2, method: self)
+            params.methodAdjustments = PrayerAdjustments(sunrise: -3, dhuhr: 3, asr: 3, maghrib: 3)
+            return params
         case .moonsightingCommittee:
-            return (fajrAngle: 18, ishaAngle: 18, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(dhuhr: 5, maghrib: 3), rounding: .nearest)
+            var params = CalculationParameters(fajrAngle: 18, ishaAngle: 18, method: self)
+            params.methodAdjustments = PrayerAdjustments(dhuhr: 5, maghrib: 3)
+            return params
         case .northAmerica:
-            return (fajrAngle: 15, ishaAngle: 15, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(dhuhr: 1), rounding: .nearest)
+            var params = CalculationParameters(fajrAngle: 15, ishaAngle: 15, method: self)
+            params.methodAdjustments = PrayerAdjustments(dhuhr: 1)
+            return params
         case .kuwait:
-            return (fajrAngle: 18, ishaAngle: 17.5, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(), rounding: .nearest)
+            return CalculationParameters(fajrAngle: 18, ishaAngle: 17.5, method: self)
         case .qatar:
-            return (fajrAngle: 18, ishaAngle: 0, ishaInterval: 90, maghribAngle: nil, methodAdjustments: PrayerAdjustments(), rounding: .nearest)
+            return CalculationParameters(fajrAngle: 18, ishaInterval: 90, method: self)
         case .singapore:
-            return (fajrAngle: 20, ishaAngle: 18, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(dhuhr: 1), rounding: .up)
+            var params = CalculationParameters(fajrAngle: 20, ishaAngle: 18, method: self)
+            params.methodAdjustments = PrayerAdjustments(dhuhr: 1)
+            params.rounding = .up
+            return params
         case .tehran:
-            return (fajrAngle: 17.7, ishaAngle: 14, ishaInterval: 0, maghribAngle: 4.5, methodAdjustments: PrayerAdjustments(), rounding: .nearest)
+            return CalculationParameters(fajrAngle: 17.7, maghribAngle: 4.5, ishaAngle: 14, method: self)
         case .turkey:
-            return (fajrAngle: 18, ishaAngle: 17, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(fajr: 0, sunrise: -7, dhuhr: 5, asr: 4, maghrib: 7, isha: 0), rounding: .nearest)
+            var params = CalculationParameters(fajrAngle: 18, ishaAngle: 17, method: self)
+            params.methodAdjustments = PrayerAdjustments(fajr: 0, sunrise: -7, dhuhr: 5, asr: 4, maghrib: 7, isha: 0)
+            return params
         case .other:
-            return (fajrAngle: 0, ishaAngle: 0, ishaInterval: 0, maghribAngle: nil, methodAdjustments: PrayerAdjustments(), rounding: .nearest)
+            return CalculationParameters(fajrAngle: 0, ishaAngle: 0, method: self)
         }
     }
 }
