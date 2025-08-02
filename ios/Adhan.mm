@@ -120,9 +120,12 @@ RCT_REMAP_METHOD(getTimeForPrayer,
     }
 }
 
-RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(BOOL, validateCoordinates:(NSDictionary *)coordinates) {
-    NSDictionary *copiedCoordinates = [coordinates copy];
-    return [impl validateCoordinatesWithCoordinates:copiedCoordinates];
+RCT_REMAP_METHOD(validateCoordinates,
+                 validateCoordinatesWithCoordinates:(NSDictionary *)coordinates
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+    BOOL isValid = [impl validateCoordinatesWithCoordinates:coordinates];
+    resolve(@(isValid));
 }
 
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods) {
