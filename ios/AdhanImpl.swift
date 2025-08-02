@@ -161,9 +161,11 @@ public class AdhanImpl: NSObject {
     }
     
     @objc public func validateCoordinates(coordinates: NSDictionary) -> Bool {
+        let swiftCoordinates = coordinates as? [String: Any] ?? [:]
+        
         guard
-            let lat = coordinates["latitude"] as? Double,
-            let lon = coordinates["longitude"] as? Double
+            let lat = swiftCoordinates["latitude"] as? Double,
+            let lon = swiftCoordinates["longitude"] as? Double
         else {
             return false
         }
