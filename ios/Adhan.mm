@@ -1,6 +1,6 @@
 #import "Adhan.h"
 #import <React/RCTLog.h>
-
+@import React;
 #import "Adhan-Swift.h"
 
 @implementation Adhan {
@@ -27,95 +27,110 @@ RCT_EXPORT_MODULE()
 }
 #endif
 
-// --- Now update all your method mappings:
+// --- Promise-based (Async) Methods ---
 
 RCT_REMAP_METHOD(validateCoordinates,
-  validateCoordinatesWithCoordinates:(NSDictionary *)coordinates
+  validateCoordinates:(NSDictionary *)coordinates
   resolver:(RCTPromiseResolveBlock)resolve
   rejecter:(RCTPromiseRejectBlock)reject
 ) {
-  [impl validateCoordinatesWithCoordinates:coordinates
-                              resolver:resolve
-                              rejecter:reject];
+  [impl validateCoordinates:coordinates
+                   resolver:resolve
+                   rejecter:reject];
 }
 
 RCT_REMAP_METHOD(calculatePrayerTimes,
-  calculatePrayerTimesWithCoordinates:(NSDictionary *)coordinates
+  calculatePrayerTimes:(NSDictionary *)coordinates
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
   resolver:(RCTPromiseResolveBlock)resolve
   rejecter:(RCTPromiseRejectBlock)reject
 ) {
-  [impl calculatePrayerTimesWithCoordinates:coordinates
-                             dateComponents:dateComponents
-                      calculationParameters:calculationParameters
-                                  resolver:resolve
-                                  rejecter:reject];
+  [impl calculatePrayerTimes:coordinates
+            dateComponents:dateComponents
+     calculationParameters:calculationParameters
+                  resolver:resolve
+                  rejecter:reject];
 }
 
 RCT_REMAP_METHOD(calculateQibla,
-  calculateQiblaWithCoordinates:(NSDictionary *)coordinates
+  calculateQibla:(NSDictionary *)coordinates
   resolver:(RCTPromiseResolveBlock)resolve
   rejecter:(RCTPromiseRejectBlock)reject
 ) {
-  [impl calculateQiblaWithCoordinates:coordinates
-                             resolver:resolve
-                             rejecter:reject];
+  [impl calculateQibla:coordinates
+              resolver:resolve
+              rejecter:reject];
 }
 
 RCT_REMAP_METHOD(calculateSunnahTimes,
-  calculateSunnahTimesWithCoordinates:(NSDictionary *)coordinates
+  calculateSunnahTimes:(NSDictionary *)coordinates
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
   resolver:(RCTPromiseResolveBlock)resolve
   rejecter:(RCTPromiseRejectBlock)reject
 ) {
-  [impl calculateSunnahTimesWithCoordinates:coordinates
-                              dateComponents:dateComponents
-                       calculationParameters:calculationParameters
-                                   resolver:resolve
-                                   rejecter:reject];
+  [impl calculateSunnahTimes:coordinates
+            dateComponents:dateComponents
+     calculationParameters:calculationParameters
+                  resolver:resolve
+                  rejecter:reject];
 }
 
 RCT_REMAP_METHOD(getCurrentPrayer,
-  getCurrentPrayerWithCoordinates:(NSDictionary *)coordinates
+  getCurrentPrayer:(NSDictionary *)coordinates
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
   currentTime:(nonnull NSNumber *)currentTime
   resolver:(RCTPromiseResolveBlock)resolve
   rejecter:(RCTPromiseRejectBlock)reject
 ) {
-  [impl getCurrentPrayerWithCoordinates:coordinates
-                         dateComponents:dateComponents
-                  calculationParameters:calculationParameters
-                            currentTime:currentTime
-                              resolver:resolve
-                              rejecter:reject];
+  [impl getCurrentPrayer:coordinates
+        dateComponents:dateComponents
+ calculationParameters:calculationParameters
+           currentTime:currentTime
+              resolver:resolve
+              rejecter:reject];
 }
 
 RCT_REMAP_METHOD(getTimeForPrayer,
-  getTimeForPrayerWithCoordinates:(NSDictionary *)coordinates
+  getTimeForPrayer:(NSDictionary *)coordinates
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
   prayer:(NSString *)prayer
   resolver:(RCTPromiseResolveBlock)resolve
   rejecter:(RCTPromiseRejectBlock)reject
 ) {
-  [impl getTimeForPrayerWithCoordinates:coordinates
-                         dateComponents:dateComponents
-                  calculationParameters:calculationParameters
-                                prayer:prayer
-                              resolver:resolve
-                              rejecter:reject];
+  [impl getTimeForPrayer:coordinates
+        dateComponents:dateComponents
+ calculationParameters:calculationParameters
+                prayer:prayer
+              resolver:resolve
+              rejecter:reject];
 }
 
-// Sync exports:
+RCT_REMAP_METHOD(calculatePrayerTimesRange,
+                 calculatePrayerTimesRange:(NSDictionary *)coordinates
+                 startDate:(NSDictionary *)startDate
+                 endDate:(NSDictionary *)endDate
+                 calculationParameters:(NSDictionary *)calculationParameters
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+    
+    // Simplified stub for now
+    resolve(@[]);
+}
+
+// --- Synchronous Methods ---
+
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods) {
   return [impl getCalculationMethods];
 }
+
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getMethodParameters:(NSString *)method) {
   return [impl getMethodParameters:method];
 }
+
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getLibraryInfo) {
   return [impl getLibraryInfo];
 }
