@@ -30,50 +30,50 @@ RCT_EXPORT_MODULE()
 // --- Promise-based (Async) Methods ---
 
 RCT_EXPORT_METHOD(validateCoordinates:(NSDictionary *)coordinates
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolver:(RCTPromiseResolveBlock)resolver
+                  rejecter:(RCTPromiseRejectBlock)rejecter)
 {
   [impl validateCoordinates:coordinates
-                   resolver:resolve
-                   rejecter:reject];
+                   resolver:resolver
+                   rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(calculatePrayerTimes,
   calculatePrayerTimes:(NSDictionary *)coordinates
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
-  resolver:(RCTPromiseResolveBlock)resolve
-  rejecter:(RCTPromiseRejectBlock)reject
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
 ) {
   [impl calculatePrayerTimes:coordinates
             dateComponents:dateComponents
      calculationParameters:calculationParameters
-                  resolver:resolve
-                  rejecter:reject];
+                  resolver:resolver
+                  rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(calculateQibla,
   calculateQibla:(NSDictionary *)coordinates
-  resolver:(RCTPromiseResolveBlock)resolve
-  rejecter:(RCTPromiseRejectBlock)reject
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
 ) {
   [impl calculateQibla:coordinates
-              resolver:resolve
-              rejecter:reject];
+              resolver:resolver
+              rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(calculateSunnahTimes,
   calculateSunnahTimes:(NSDictionary *)coordinates
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
-  resolver:(RCTPromiseResolveBlock)resolve
-  rejecter:(RCTPromiseRejectBlock)reject
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
 ) {
   [impl calculateSunnahTimes:coordinates
             dateComponents:dateComponents
      calculationParameters:calculationParameters
-                  resolver:resolve
-                  rejecter:reject];
+                  resolver:resolver
+                  rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(getCurrentPrayer,
@@ -81,15 +81,15 @@ RCT_REMAP_METHOD(getCurrentPrayer,
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
   currentTime:(nonnull NSNumber *)currentTime
-  resolver:(RCTPromiseResolveBlock)resolve
-  rejecter:(RCTPromiseRejectBlock)reject
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
 ) {
   [impl getCurrentPrayer:coordinates
         dateComponents:dateComponents
  calculationParameters:calculationParameters
            currentTime:currentTime
-              resolver:resolve
-              rejecter:reject];
+              resolver:resolver
+              rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(getTimeForPrayer,
@@ -97,15 +97,15 @@ RCT_REMAP_METHOD(getTimeForPrayer,
   dateComponents:(NSDictionary *)dateComponents
   calculationParameters:(NSDictionary *)calculationParameters
   prayer:(NSString *)prayer
-  resolver:(RCTPromiseResolveBlock)resolve
-  rejecter:(RCTPromiseRejectBlock)reject
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
 ) {
   [impl getTimeForPrayer:coordinates
         dateComponents:dateComponents
  calculationParameters:calculationParameters
                 prayer:prayer
-              resolver:resolve
-              rejecter:reject];
+              resolver:resolver
+              rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(calculatePrayerTimesRange,
@@ -113,8 +113,8 @@ RCT_REMAP_METHOD(calculatePrayerTimesRange,
                  startDate:(NSDictionary *)startDate
                  endDate:(NSDictionary *)endDate
                  calculationParameters:(NSDictionary *)calculationParameters
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject) {
+                 resolver:(RCTPromiseResolveBlock)resolver
+                 rejecter:(RCTPromiseRejectBlock)rejecter) {
     
     // Simplified stub for now
     resolve(@[]);
