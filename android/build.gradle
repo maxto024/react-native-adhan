@@ -66,7 +66,8 @@ android {
     main {
       java.srcDirs += [
         "generated/java",
-        "generated/jni"
+        "generated/jni",
+        "adhan-kotlin/adhan/src/commonMain/kotlin"
       ]
     }
   }
@@ -83,6 +84,9 @@ def kotlin_version = getExtOrDefault("kotlinVersion")
 dependencies {
   implementation "com.facebook.react:react-android"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  
+  // kotlinx-datetime for adhan-kotlin
+  implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.4.1"
 }
 
 react {

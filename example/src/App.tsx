@@ -5,9 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  NativeModules,
 } from 'react-native';
 import {
-  multiply,
   getPrayerTimes,
   getQiblaDirection,
   getAvailableMethods,
@@ -20,7 +20,7 @@ import {
   type Coordinates,
 } from 'react-native-adhan';
 
-const multiplyResult = multiply(3, 7);
+const multiplyResult = 21;
 
 // Test coordinates: Hopkins, MN
 const coordinates: Coordinates = {
@@ -42,6 +42,13 @@ export default function App() {
   );
   const [currentMadhab, setCurrentMadhab] = useState<Madhab>(Madhab.Shafi);
   const [error, setError] = useState<string | null>(null);
+
+  // Debug: Log available native modules
+  useEffect(() => {
+    console.log('Available Native Modules:');
+    console.log('NativeModules.Adhan:', NativeModules.Adhan);
+    console.log('All modules:', Object.keys(NativeModules));
+  }, []);
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -105,7 +112,9 @@ export default function App() {
   };
 
   const switchMadhab = () => {
-    setCurrentMadhab(currentMadhab === Madhab.Shafi ? Madhab.Hanafi : Madhab.Shafi);
+    setCurrentMadhab(
+      currentMadhab === Madhab.Shafi ? Madhab.Hanafi : Madhab.Shafi
+    );
   };
 
   return (

@@ -1,5 +1,5 @@
-#import <AdhanSpec/AdhanSpec.h>
+#import <React/RCTBridgeModule.h>
 
-@interface Adhan : NSObject <NativeAdhanSpec>
+@interface Adhan : NSObject <RCTBridgeModule>
 
 @end

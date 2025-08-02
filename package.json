@@ -67,6 +67,7 @@
   },
   "author": "Mohamed Elmi Hassan <maxto024@gmail.com> (https://github.com/maxto024)",
   "license": "MIT",
+  "podspec": "react-native-adhan.podspec",
   "bugs": {
     "url": "https://github.com/maxto024/react-native-adhan/issues"
   },
@@ -164,17 +165,14 @@
       ]
     ]
   },
-  "codegenConfig": {
-    "name": "AdhanSpec",
-    "type": "modules",
-    "jsSrcsDir": "src",
-    "android": {
-      "javaPackageName": "com.adhan"
-    }
-  },
   "create-react-native-library": {
     "languages": "kotlin-objc",
     "type": "turbo-module",
     "version": "0.52.0"
+  },
+  "codegenConfig": {
+    "name": "AdhanSpec",
+    "type": "modules",
+    "jsSrcsDir": "src"
   }
 }

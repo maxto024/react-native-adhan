@@ -1,11 +1,10 @@
-import type { TurboModule } from 'react-native';
-import { TurboModuleRegistry } from 'react-native';
+import { NativeModules } from 'react-native';
 
 /**
- * TurboModule specification for react-native-adhan
- * Following 2025 best practices for New Architecture compatibility
+ * Native module interface for react-native-adhan
+ * Promise-based methods for cross-platform compatibility
  */
-export interface Spec extends TurboModule {
+export interface AdhanNativeModule {
   /**
    * Calculate prayer times for a specific location and date
    * @param latitude Geographic latitude (-90 to 90)
@@ -13,10 +12,9 @@ export interface Spec extends TurboModule {
    * @param dateIso Date in ISO format (YYYY-MM-DD)
    * @param method Calculation method identifier
    * @param madhab School of jurisprudence ('Shafi' | 'Hanafi')
-   * @param timezone Timezone identifier (e.g., 'America/New_York') or offset (+05:00)
    * @param adjustments JSON string of prayer adjustments in minutes
    * @param customAngles JSON string of custom fajr/isha angles
-   * @returns Prayer times as JSON string
+   * @returns Promise that resolves to prayer times as JSON string
    */
   getPrayerTimes(
     latitude: number,
@@ -26,15 +24,15 @@ export interface Spec extends TurboModule {
     madhab?: string,
     adjustments?: string,
     customAngles?: string
-  ): string;
+  ): Promise<string>;
 
   /**
    * Calculate Qibla direction from given coordinates
    * @param latitude Geographic latitude
    * @param longitude Geographic longitude
-   * @returns Qibla direction info as JSON string
+   * @returns Promise that resolves to Qibla direction info as JSON string
    */
-  getQiblaDirection(latitude: number, longitude: number): string;
+  getQiblaDirection(latitude: number, longitude: number): Promise<string>;
 
   /**
    * Calculate prayer times for multiple consecutive days
@@ -47,7 +45,7 @@ export interface Spec extends TurboModule {
    * @param timezone Timezone identifier or offset
    * @param adjustments JSON string of adjustments
    * @param customAngles JSON string of custom fajr/isha angles
-   * @returns Array of prayer times as JSON string
+   * @returns Promise that resolves to array of prayer times as JSON string
    */
   getBulkPrayerTimes(
     latitude: number,
@@ -59,53 +57,53 @@ export interface Spec extends TurboModule {
     timezone?: string,
     adjustments?: string,
     customAngles?: string
-  ): string;
+  ): Promise<string>;
 
   /**
    * Get information about all available calculation methods
-   * @returns Array of method information as JSON string
+   * @returns Promise that resolves to array of method information as JSON string
    */
-  getAvailableMethods(): string;
+  getAvailableMethods(): Promise<string>;
 
   /**
    * Validate coordinates
    * @param latitude Geographic latitude
    * @param longitude Geographic longitude
-   * @returns Whether coordinates are valid
+   * @returns Promise that resolves to whether coordinates are valid
    */
-  validateCoordinates(latitude: number, longitude: number): boolean;
+  validateCoordinates(latitude: number, longitude: number): Promise<boolean>;
 
   /**
    * Get module version and build information
-   * @returns Version and build info as JSON string
+   * @returns Promise that resolves to version and build info as JSON string
    */
-  getModuleInfo(): string;
+  getModuleInfo(): Promise<string>;
 
   /**
    * Get performance metrics for the last calculation
-   * @returns Performance metrics as JSON string
+   * @returns Promise that resolves to performance metrics as JSON string
    */
-  getPerformanceMetrics(): string;
+  getPerformanceMetrics(): Promise<string>;
 
   /**
    * Clear internal caches and reset counters
    */
-  clearCache(): void;
+  clearCache(): Promise<void>;
 
   /**
    * Enable or disable debug logging
    * @param enabled Whether to enable debug logging
    */
-  setDebugLogging(enabled: boolean): void;
+  setDebugLogging(enabled: boolean): Promise<void>;
 
   /**
    * Simple multiplication for testing TurboModule connectivity
    * @param a First number
    * @param b Second number
-   * @returns Product of a and b
+   * @returns Promise that resolves to product of a and b
    */
-  multiply(a: number, b: number): number;
+  multiply(a: number, b: number): Promise<number>;
 }
 
-// Single TurboModule registry call following 2025 best practices
-export default TurboModuleRegistry.getEnforcing<Spec>('Adhan');
+// Access the native module through React Native bridge
+export default NativeModules.Adhan as AdhanNativeModule;

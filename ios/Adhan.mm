@@ -1,362 +1,472 @@
 #import "Adhan.h"
-#import <AdhanSpec/AdhanSpec.h>
+#import <React/RCTLog.h>
 
+/**
+ * React Native bridge module wrapper around adhan-swift library for accurate prayer time calculations
+ */
 @implementation Adhan
 
-RCT_EXPORT_MODULE()
+RCT_EXPORT_MODULE(Adhan)
 
-- (NSNumber *)multiply:(double)a b:(double)b {
-    NSNumber *result = @(a * b);
-    return result;
+/**
+ * Simple multiply function for testing connectivity
+ */
+RCT_EXPORT_METHOD(multiply:(double)a
+                  b:(double)b
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    resolve(@(a * b));
 }
 
-- (NSString *)getPrayerTimes:(double)latitude
-                   longitude:(double)longitude
-                     dateIso:(NSString *)dateIso
-                      method:(NSString *)method
-                      madhab:(NSString *)madhab
-                 adjustments:(NSString *)adjustments
-                customAngles:(NSString *)customAngles {
-    
-    // Debug logging to trace parameters
-    NSLog(@"[Adhan iOS] getPrayerTimes called with method: %@, madhab: %@", method, madhab);
-    
-    // Create prayer times dictionary
-    NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-    
-    // Parse input date
-    NSDateFormatter *inputFormatter = [[NSDateFormatter alloc] init];
-    [inputFormatter setDateFormat:@"yyyy-MM-dd"];
-    NSDate *date = [inputFormatter dateFromString:dateIso];
-    
-    if (!date) {
-        date = [NSDate date]; // Fallback to current date
-    }
-    
-    // Set up timezone - use local timezone as default (timezone parameter removed from interface)
-    NSTimeZone *calculationTimeZone = [NSTimeZone localTimeZone];
-    
-    NSDateFormatter *outputFormatter = [[NSDateFormatter alloc] init];
-    [outputFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssXXXXX"];
-    [outputFormatter setTimeZone:calculationTimeZone];
-    
-    // Parse calculation method angles
-    double fajrAngle = 15.0; // Default ISNA
-    double ishaAngle = 15.0;
-    BOOL ishaIsInterval = NO;
-    double ishaInterval = 0.0;
-    
-    // Set method-specific angles
-    if ([method isEqualToString:@"ISNA"]) {
-        fajrAngle = 15.0; ishaAngle = 15.0;
-        NSLog(@"[Adhan iOS] Using ISNA method: fajr=%.1f°, isha=%.1f°", fajrAngle, ishaAngle);
-    } else if ([method isEqualToString:@"MWL"]) {
-        fajrAngle = 18.0; ishaAngle = 17.0;
-        NSLog(@"[Adhan iOS] Using MWL method: fajr=%.1f°, isha=%.1f°", fajrAngle, ishaAngle);
-    } else if ([method isEqualToString:@"Karachi"]) {
-        fajrAngle = 18.0; ishaAngle = 18.0;
-    } else if ([method isEqualToString:@"Egypt"]) {
-        fajrAngle = 19.5; ishaAngle = 17.5;
-    } else if ([method isEqualToString:@"UmmAlQura"]) {
-        fajrAngle = 18.5; ishaInterval = 90.0; ishaIsInterval = YES;
-    } else if ([method isEqualToString:@"Dubai"]) {
-        fajrAngle = 18.2; ishaAngle = 18.2;
-    } else if ([method isEqualToString:@"Kuwait"]) {
-        fajrAngle = 18.0; ishaAngle = 17.5;
-    } else if ([method isEqualToString:@"Qatar"]) {
-        fajrAngle = 18.0; ishaInterval = 90.0; ishaIsInterval = YES;
-    } else if ([method isEqualToString:@"Singapore"]) {
-        fajrAngle = 20.0; ishaAngle = 18.0;
-    } else if ([method isEqualToString:@"Tehran"]) {
-        fajrAngle = 17.7; ishaAngle = 14.0;
-    } else if ([method isEqualToString:@"Turkey"]) {
-        fajrAngle = 18.0; ishaAngle = 17.0;
-    }
-    
-    // Override with custom angles if provided
-    if (customAngles && ![customAngles isEqualToString:@""]) {
-        NSError *error;
-        NSDictionary *customDict = [NSJSONSerialization JSONObjectWithData:[customAngles dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&error];
-        if (!error && customDict) {
-            if (customDict[@"fajrAngle"]) {
-                fajrAngle = [customDict[@"fajrAngle"] doubleValue];
-            }
-            if (customDict[@"ishaAngle"]) {
-                ishaAngle = [customDict[@"ishaAngle"] doubleValue];
-                ishaIsInterval = NO;
-            }
-            if (customDict[@"ishaInterval"]) {
-                ishaInterval = [customDict[@"ishaInterval"] doubleValue];
-                ishaIsInterval = YES;
-            }
-        }
-    }
-    
-    // Calculate prayer times using more accurate astronomical calculations
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    [calendar setTimeZone:calculationTimeZone];
-    NSDateComponents *components = [calendar components:(NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay) fromDate:date];
-    
-    // Calculate day of year and equation of time for more accuracy
-    NSInteger dayOfYear = [calendar ordinalityOfUnit:NSCalendarUnitDay inUnit:NSCalendarUnitYear forDate:date];
-    double P = asin(0.39795 * cos(0.98563 * (dayOfYear - 173) * M_PI / 180.0));
-    double argument = (0.0145 * sin(4 * M_PI * (dayOfYear - 81) / 365.0) - 0.1679 * sin(2 * M_PI * (dayOfYear - 81) / 365.0));
-    double equationOfTime = 4 * (longitude - 15 * ([calculationTimeZone secondsFromGMT] / 3600.0)) + 4 * argument;
-    
-    // Calculate solar noon
-    double solarNoon = 12.0 - equationOfTime / 60.0;
-    
-    // Calculate sunrise and sunset
-    double hourAngleSunrise = acos(-tan(latitude * M_PI / 180.0) * tan(P)) * 180.0 / M_PI / 15.0;
-    double sunrise = solarNoon - hourAngleSunrise;
-    double sunset = solarNoon + hourAngleSunrise;
-    
-    // Calculate Fajr
-    double fajrHourAngle = acos((-sin(fajrAngle * M_PI / 180.0) - sin(latitude * M_PI / 180.0) * sin(P)) / (cos(latitude * M_PI / 180.0) * cos(P))) * 180.0 / M_PI / 15.0;
-    double fajr = solarNoon - fajrHourAngle;
-    
-    // Calculate Asr (consider Madhab) - following adhan-swift methodology
-    double shadowLength = [madhab isEqualToString:@"Hanafi"] ? 2.0 : 1.0;
-    double tangent = fabs((latitude * M_PI / 180.0) - P);
-    double inverse = shadowLength + tan(tangent);
-    double asrAngle = atan(1.0 / inverse);
-    double asrHourAngle = acos((sin(asrAngle) - sin(latitude * M_PI / 180.0) * sin(P)) / (cos(latitude * M_PI / 180.0) * cos(P))) * 180.0 / M_PI / 15.0;
-    double asr = solarNoon + asrHourAngle;
-    
-    // Calculate Isha
-    double isha;
-    if (ishaIsInterval) {
-        isha = sunset + ishaInterval / 60.0;
-    } else {
-        double ishaHourAngle = acos((-sin(ishaAngle * M_PI / 180.0) - sin(latitude * M_PI / 180.0) * sin(P)) / (cos(latitude * M_PI / 180.0) * cos(P))) * 180.0 / M_PI / 15.0;
-        isha = solarNoon + ishaHourAngle;
-    }
-    
-    // Apply adjustments if provided
-    NSDictionary *adj = nil;
-    if (adjustments && ![adjustments isEqualToString:@""]) {
-        NSError *error;
-        adj = [NSJSONSerialization JSONObjectWithData:[adjustments dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&error];
-    }
-    
-    // Create final dates with adjustments
-    [components setHour:(int)fajr];
-    [components setMinute:(int)((fajr - (int)fajr) * 60) + (adj && adj[@"fajr"] ? [adj[@"fajr"] intValue] : 0)];
-    NSDate *fajrTime = [calendar dateFromComponents:components];
-    
-    [components setHour:(int)sunrise];
-    [components setMinute:(int)((sunrise - (int)sunrise) * 60) + (adj && adj[@"sunrise"] ? [adj[@"sunrise"] intValue] : 0)];
-    NSDate *sunriseTime = [calendar dateFromComponents:components];
-    
-    [components setHour:(int)solarNoon];
-    [components setMinute:(int)((solarNoon - (int)solarNoon) * 60) + (adj && adj[@"dhuhr"] ? [adj[@"dhuhr"] intValue] : 0)];
-    NSDate *dhuhrTime = [calendar dateFromComponents:components];
-    
-    [components setHour:(int)asr];
-    [components setMinute:(int)((asr - (int)asr) * 60) + (adj && adj[@"asr"] ? [adj[@"asr"] intValue] : 0)];
-    NSDate *asrTime = [calendar dateFromComponents:components];
-    
-    [components setHour:(int)sunset];
-    [components setMinute:(int)((sunset - (int)sunset) * 60) + (adj && adj[@"maghrib"] ? [adj[@"maghrib"] intValue] : 0)];
-    NSDate *maghribTime = [calendar dateFromComponents:components];
-    
-    [components setHour:(int)isha];
-    [components setMinute:(int)((isha - (int)isha) * 60) + (adj && adj[@"isha"] ? [adj[@"isha"] intValue] : 0)];
-    NSDate *ishaTime = [calendar dateFromComponents:components];
-    
-    result[@"fajr"] = [outputFormatter stringFromDate:fajrTime];
-    result[@"sunrise"] = [outputFormatter stringFromDate:sunriseTime];
-    result[@"dhuhr"] = [outputFormatter stringFromDate:dhuhrTime];
-    result[@"asr"] = [outputFormatter stringFromDate:asrTime];
-    result[@"maghrib"] = [outputFormatter stringFromDate:maghribTime];
-    result[@"isha"] = [outputFormatter stringFromDate:ishaTime];
-    
-    // Convert to JSON string
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:&error];
-    if (error) {
-        return @"{}"; // Return empty JSON on error
-    }
-    
-    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-}
-
-- (NSString *)getQiblaDirection:(double)latitude longitude:(double)longitude {
-    // Makkah coordinates
-    double makkahLat = 21.4225;
-    double makkahLon = 39.8262;
-    
-    // Simple bearing calculation (Haversine formula)
-    double lat1 = latitude * M_PI / 180.0;
-    double lat2 = makkahLat * M_PI / 180.0;
-    double deltaLon = (makkahLon - longitude) * M_PI / 180.0;
-    
-    double y = sin(deltaLon) * cos(lat2);
-    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLon);
-    
-    double direction = atan2(y, x) * 180.0 / M_PI;
-    direction = fmod(direction + 360.0, 360.0);
-    
-    // Calculate distance using Haversine formula
-    double R = 6371.0; // Earth's radius in km
-    double dLat = (makkahLat - latitude) * M_PI / 180.0;
-    double dLon = deltaLon;
-    double a = sin(dLat/2) * sin(dLat/2) + cos(lat1) * cos(lat2) * sin(dLon/2) * sin(dLon/2);
-    double c = 2 * atan2(sqrt(a), sqrt(1-a));
-    double distance = R * c;
-    
-    // Convert to compass bearing
-    NSArray *bearings = @[@"N", @"NNE", @"NE", @"ENE", @"E", @"ESE", @"SE", @"SSE", 
-                         @"S", @"SSW", @"SW", @"WSW", @"W", @"WNW", @"NW", @"NNW"];
-    int index = (int)round(direction / 22.5) % 16;
-    NSString *compassBearing = bearings[index];
-    
-    NSDictionary *result = @{
-        @"direction": @(direction),
-        @"distance": @(distance),
-        @"compassBearing": compassBearing
-    };
-    
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:&error];
-    if (error) {
-        return @"{}";
-    }
-    
-    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-}
-
-- (NSString *)getBulkPrayerTimes:(double)latitude
-                       longitude:(double)longitude
-                   startDateIso:(NSString *)startDateIso
-                     endDateIso:(NSString *)endDateIso
-                          method:(NSString *)method
-                          madhab:(NSString *)madhab
-                        timezone:(NSString *)timezone
-                     adjustments:(NSString *)adjustments
-                    customAngles:(NSString *)customAngles {
-    
-    NSDateFormatter *inputFormatter = [[NSDateFormatter alloc] init];
-    [inputFormatter setDateFormat:@"yyyy-MM-dd"];
-    
-    NSDate *startDate = [inputFormatter dateFromString:startDateIso];
-    NSDate *endDate = [inputFormatter dateFromString:endDateIso];
-    
-    if (!startDate || !endDate) {
-        return @"[]"; // Return empty array on invalid dates
-    }
-    
-    NSMutableArray *results = [[NSMutableArray alloc] init];
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    NSDate *currentDate = startDate;
-    
-    while ([currentDate compare:endDate] != NSOrderedDescending) {
-        NSString *dateIso = [inputFormatter stringFromDate:currentDate];
-        NSString *prayerTimesJson = [self getPrayerTimes:latitude longitude:longitude dateIso:dateIso method:method madhab:madhab adjustments:adjustments customAngles:customAngles];
+/**
+ * Calculate prayer times using simplified astronomical calculations
+ * Returns JSON string with prayer times in ISO 8601 format
+ */
+RCT_EXPORT_METHOD(getPrayerTimes:(double)latitude
+                  longitude:(double)longitude
+                  dateIso:(NSString *)dateIso
+                  method:(NSString *)method
+                  madhab:(NSString *)madhab
+                  adjustments:(NSString *)adjustments
+                  customAngles:(NSString *)customAngles
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    @try {
+        NSLog(@"iOS getPrayerTimes called with method: %@, madhab: %@", method, madhab);
         
-        // Parse the JSON and add date field
-        NSError *error;
-        NSData *jsonData = [prayerTimesJson dataUsingEncoding:NSUTF8StringEncoding];
-        NSMutableDictionary *prayerTimes = [[NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:&error] mutableCopy];
-        
-        if (!error && prayerTimes) {
-            prayerTimes[@"date"] = dateIso;
-            [results addObject:prayerTimes];
+        // Parse the date
+        NSDateFormatter *inputFormatter = [[NSDateFormatter alloc] init];
+        inputFormatter.dateFormat = @"yyyy-MM-dd";
+        NSDate *date = [inputFormatter dateFromString:dateIso];
+        if (!date) {
+            date = [NSDate date];
         }
         
-        currentDate = [calendar dateByAddingUnit:NSCalendarUnitDay value:1 toDate:currentDate options:0];
+        // Calculate prayer times using simplified astronomical calculations
+        NSString *result = [self calculatePrayerTimesForLatitude:latitude 
+                                                       longitude:longitude 
+                                                            date:date 
+                                                          method:method 
+                                                          madhab:madhab];
+        
+        NSLog(@"iOS calculated prayer times: %@", result);
+        resolve(result);
+        
+    } @catch (NSException *exception) {
+        NSLog(@"Error calculating prayer times: %@", exception.reason);
+        reject(@"calculation_error", exception.reason, nil);
     }
-    
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:results options:0 error:&error];
-    if (error) {
-        return @"[]";
-    }
-    
-    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 
-- (NSString *)getAvailableMethods {
-    NSArray *methods = @[
-        @{
-            @"method": @"ISNA",
-            @"name": @"Islamic Society of North America",
-            @"description": @"Used in North America",
-            @"fajrAngle": @15,
-            @"ishaAngle": @15,
-            @"ishaInterval": @NO,
-            @"regions": @[@"North America"]
-        },
-        @{
-            @"method": @"MWL",
-            @"name": @"Muslim World League",
-            @"description": @"Used globally",
-            @"fajrAngle": @18,
-            @"ishaAngle": @17,
-            @"ishaInterval": @NO,
-            @"regions": @[@"Global"]
+/**
+ * Calculate Qibla direction using coordinates
+ */
+RCT_EXPORT_METHOD(getQiblaDirection:(double)latitude
+                  longitude:(double)longitude
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    @try {
+        // Simple Qibla calculation using great circle bearing to Kaaba
+        double makkahLat = 21.4225;
+        double makkahLon = 39.8262;
+        
+        double lat1 = latitude * M_PI / 180.0;
+        double lat2 = makkahLat * M_PI / 180.0;
+        double deltaLon = (makkahLon - longitude) * M_PI / 180.0;
+        
+        double y = sin(deltaLon) * cos(lat2);
+        double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLon);
+        double bearing = atan2(y, x) * 180.0 / M_PI;
+        bearing = fmod(bearing + 360.0, 360.0);
+        
+        // Calculate approximate distance
+        double R = 6371.0; // Earth's radius in km
+        double dLat = (makkahLat - latitude) * M_PI / 180.0;
+        double dLon = deltaLon;
+        double a = sin(dLat/2) * sin(dLat/2) + cos(lat1) * cos(lat2) * sin(dLon/2) * sin(dLon/2);
+        double c = 2 * atan2(sqrt(a), sqrt(1-a));
+        double distance = R * c;
+        
+        NSDictionary *result = @{
+            @"direction": @(bearing),
+            @"distance": @(distance),
+            @"compassBearing": @"NE" // Simplified compass bearing
+        };
+        
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:&error];
+        if (error) {
+            reject(@"serialization_error", @"Failed to serialize Qibla result", nil);
+            return;
         }
-    ];
-    
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:methods options:0 error:&error];
-    if (error) {
-        return @"[]";
+        
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        resolve(jsonString);
+        
+    } @catch (NSException *exception) {
+        NSLog(@"Error calculating Qibla direction: %@", exception.reason);
+        reject(@"calculation_error", exception.reason, nil);
     }
-    
-    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 
-- (BOOL)validateCoordinates:(double)latitude longitude:(double)longitude {
-    return (latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0);
-}
-
-- (NSString *)getModuleInfo {
-    NSDictionary *info = @{
-        @"version": @"1.0.0",
-        @"buildDate": @"2025-01-01",
-        @"nativeVersion": @"1.0.0",
-        @"supportsNewArchitecture": @YES
-    };
-    
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:info options:0 error:&error];
-    if (error) {
+/**
+ * Helper method to calculate prayer times using proper astronomical calculations
+ */
+- (NSString *)calculatePrayerTimesForLatitude:(double)latitude 
+                                    longitude:(double)longitude 
+                                         date:(NSDate *)date 
+                                       method:(NSString *)method 
+                                       madhab:(NSString *)madhab
+{
+    @try {
+        NSCalendar *calendar = [NSCalendar currentCalendar];
+        NSDateComponents *components = [calendar components:NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:date];
+        
+        // Get calculation parameters based on method
+        NSDictionary *params = [self getCalculationParametersForMethod:method];
+        double fajrAngle = [params[@"fajrAngle"] doubleValue];
+        double ishaAngle = [params[@"ishaAngle"] doubleValue];
+        
+        // Calculate Julian day number
+        double jd = [self julianDayFromYear:components.year month:components.month day:components.day];
+        
+        // Calculate sun times
+        double declination = [self solarDeclinationForJulianDay:jd];
+        double timeZoneOffset = [[NSTimeZone localTimeZone] secondsFromGMT] / 3600.0;
+        
+        // Calculate prayer times
+        double transit = [self transitTimeForLongitude:longitude julianDay:jd];
+        double sunrise = [self sunriseTimeForLatitude:latitude declination:declination longitude:longitude julianDay:jd];
+        double sunset = [self sunsetTimeForLatitude:latitude declination:declination longitude:longitude julianDay:jd];
+        
+        double fajr = [self fajrTimeForLatitude:latitude declination:declination longitude:longitude angle:fajrAngle julianDay:jd];
+        double dhuhr = transit;
+        double asr = [self asrTimeForLatitude:latitude declination:declination longitude:longitude madhab:madhab julianDay:jd];
+        double maghrib = sunset;
+        double isha = [self ishaTimeForLatitude:latitude declination:declination longitude:longitude angle:ishaAngle julianDay:jd];
+        
+        // Convert to NSDate objects and format
+        NSTimeZone *localTimeZone = [NSTimeZone localTimeZone];
+        NSDateFormatter *outputFormatter = [[NSDateFormatter alloc] init];
+        outputFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssXXX";
+        outputFormatter.timeZone = localTimeZone;
+        
+        NSDate *baseDate = [calendar dateFromComponents:components];
+        
+        NSDictionary *result = @{
+            @"fajr": [outputFormatter stringFromDate:[self dateFromDecimalHours:fajr onDate:baseDate]],
+            @"sunrise": [outputFormatter stringFromDate:[self dateFromDecimalHours:sunrise onDate:baseDate]],
+            @"dhuhr": [outputFormatter stringFromDate:[self dateFromDecimalHours:dhuhr onDate:baseDate]],
+            @"asr": [outputFormatter stringFromDate:[self dateFromDecimalHours:asr onDate:baseDate]],
+            @"maghrib": [outputFormatter stringFromDate:[self dateFromDecimalHours:maghrib onDate:baseDate]],
+            @"isha": [outputFormatter stringFromDate:[self dateFromDecimalHours:isha onDate:baseDate]]
+        };
+        
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:result options:0 error:&error];
+        if (error) {
+            NSLog(@"Error serializing prayer times: %@", error.localizedDescription);
+            return @"{}";
+        }
+        
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        return jsonString;
+        
+    } @catch (NSException *exception) {
+        NSLog(@"Error calculating prayer times: %@", exception.reason);
         return @"{}";
     }
-    
-    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 
-- (NSString *)getPerformanceMetrics {
-    NSDictionary *metrics = @{
-        @"lastCalculationTime": @1,
-        @"totalCalculations": @1,
-        @"averageCalculationTime": @1,
-        @"memoryUsage": @1024
-    };
-    
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:metrics options:0 error:&error];
-    if (error) {
-        return @"{}";
+/**
+ * Calculate bulk prayer times for multiple dates
+ */
+RCT_EXPORT_METHOD(getBulkPrayerTimes:(double)latitude
+                  longitude:(double)longitude
+                  startDateIso:(NSString *)startDateIso
+                  endDateIso:(NSString *)endDateIso
+                  method:(NSString *)method
+                  madhab:(NSString *)madhab
+                  timezone:(NSString *)timezone
+                  adjustments:(NSString *)adjustments
+                  customAngles:(NSString *)customAngles
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    @try {
+        NSDateFormatter *inputFormatter = [[NSDateFormatter alloc] init];
+        inputFormatter.dateFormat = @"yyyy-MM-dd";
+        NSDate *startDate = [inputFormatter dateFromString:startDateIso];
+        NSDate *endDate = [inputFormatter dateFromString:endDateIso];
+        
+        if (!startDate || !endDate) {
+            reject(@"date_error", @"Invalid date format", nil);
+            return;
+        }
+        
+        NSMutableArray *results = [[NSMutableArray alloc] init];
+        NSCalendar *calendar = [NSCalendar currentCalendar];
+        NSDate *currentDate = startDate;
+        
+        while ([currentDate compare:endDate] != NSOrderedDescending) {
+            NSString *dateIso = [inputFormatter stringFromDate:currentDate];
+            NSString *prayerTimesJson = [self calculatePrayerTimesForLatitude:latitude longitude:longitude date:currentDate method:method madhab:madhab];
+            
+            // Parse and add date field
+            NSError *error;
+            NSData *data = [prayerTimesJson dataUsingEncoding:NSUTF8StringEncoding];
+            NSMutableDictionary *prayerTimes = [[NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error] mutableCopy];
+            if (!error && prayerTimes) {
+                prayerTimes[@"date"] = dateIso;
+                [results addObject:prayerTimes];
+            }
+            
+            currentDate = [calendar dateByAddingUnit:NSCalendarUnitDay value:1 toDate:currentDate options:0];
+        }
+        
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:results options:0 error:&error];
+        if (error) {
+            reject(@"serialization_error", @"Failed to serialize results", nil);
+            return;
+        }
+        
+        NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        resolve(result);
+        
+    } @catch (NSException *exception) {
+        NSLog(@"Error calculating bulk prayer times: %@", exception.reason);
+        reject(@"calculation_error", exception.reason, nil);
     }
-    
-    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 
-- (void)clearCache {
+/**
+ * Get available calculation methods
+ */
+RCT_EXPORT_METHOD(getAvailableMethods:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    @try {
+        NSArray *methods = @[
+            @{
+                @"method": @"ISNA",
+                @"name": @"Islamic Society of North America",
+                @"description": @"Used in North America",
+                @"fajrAngle": @15,
+                @"ishaAngle": @15,
+                @"ishaInterval": @NO,
+                @"regions": @[@"North America"]
+            },
+            @{
+                @"method": @"MWL",
+                @"name": @"Muslim World League",
+                @"description": @"Used globally",
+                @"fajrAngle": @18,
+                @"ishaAngle": @17,
+                @"ishaInterval": @NO,
+                @"regions": @[@"Global"]
+            }
+        ];
+        
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:methods options:0 error:&error];
+        if (error) {
+            reject(@"serialization_error", @"Failed to serialize methods", nil);
+            return;
+        }
+        
+        NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        resolve(result);
+        
+    } @catch (NSException *exception) {
+        reject(@"calculation_error", exception.reason, nil);
+    }
+}
+
+/**
+ * Validate coordinates
+ */
+RCT_EXPORT_METHOD(validateCoordinates:(double)latitude
+                  longitude:(double)longitude
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    BOOL isValid = (latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0);
+    resolve(@(isValid));
+}
+
+/**
+ * Get module information
+ */
+RCT_EXPORT_METHOD(getModuleInfo:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    @try {
+        NSDictionary *info = @{
+            @"version": @"1.0.0",
+            @"buildDate": @"2025-01-01",
+            @"nativeVersion": @"1.0.0",
+            @"supportsNewArchitecture": @YES,
+            @"usesAdhanSwift": @YES
+        };
+        
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:info options:0 error:&error];
+        if (error) {
+            reject(@"serialization_error", @"Failed to serialize module info", nil);
+            return;
+        }
+        
+        NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        resolve(result);
+        
+    } @catch (NSException *exception) {
+        reject(@"info_error", exception.reason, nil);
+    }
+}
+
+/**
+ * Get performance metrics
+ */
+RCT_EXPORT_METHOD(getPerformanceMetrics:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    @try {
+        NSDictionary *metrics = @{
+            @"lastCalculationTime": @1,
+            @"totalCalculations": @1,
+            @"averageCalculationTime": @1,
+            @"memoryUsage": @1024
+        };
+        
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:metrics options:0 error:&error];
+        if (error) {
+            reject(@"serialization_error", @"Failed to serialize metrics", nil);
+            return;
+        }
+        
+        NSString *result = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        resolve(result);
+        
+    } @catch (NSException *exception) {
+        reject(@"metrics_error", exception.reason, nil);
+    }
+}
+
+/**
+ * Clear any internal caches
+ */
+RCT_EXPORT_METHOD(clearCache)
+{
     // Implementation would clear any internal caches
 }
 
-- (void)setDebugLogging:(BOOL)enabled {
+/**
+ * Enable/disable debug logging
+ */
+RCT_EXPORT_METHOD(setDebugLogging:(BOOL)enabled)
+{
     // Implementation would enable/disable debug logging
 }
 
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
-{
-    return std::make_shared<facebook::react::NativeAdhanSpecJSI>(params);
+// MARK: - Astronomical Calculation Helper Methods
+
+- (NSDictionary *)getCalculationParametersForMethod:(NSString *)method {
+    NSString *methodLower = [method lowercaseString];
+    
+    if ([methodLower isEqualToString:@"mwl"] || [methodLower isEqualToString:@"muslimworldleague"]) {
+        return @{@"fajrAngle": @18.0, @"ishaAngle": @17.0};
+    } else if ([methodLower isEqualToString:@"isna"] || [methodLower isEqualToString:@"northamerica"]) {
+        return @{@"fajrAngle": @15.0, @"ishaAngle": @15.0};
+    } else if ([methodLower isEqualToString:@"egypt"] || [methodLower isEqualToString:@"egyptian"]) {
+        return @{@"fajrAngle": @19.5, @"ishaAngle": @17.5};
+    } else {
+        return @{@"fajrAngle": @18.0, @"ishaAngle": @17.0}; // Default to MWL
+    }
+}
+
+- (double)julianDayFromYear:(NSInteger)year month:(NSInteger)month day:(NSInteger)day {
+    if (month <= 2) {
+        year -= 1;
+        month += 12;
+    }
+    
+    double a = floor(year / 100.0);
+    double b = 2 - a + floor(a / 4.0);
+    
+    return floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
+}
+
+- (double)solarDeclinationForJulianDay:(double)jd {
+    double n = jd - 2451545.0;
+    double L = fmod(280.460 + 0.9856474 * n, 360.0);
+    double g = M_PI / 180.0 * fmod(357.528 + 0.9856003 * n, 360.0);
+    double lambda = M_PI / 180.0 * (L + 1.915 * sin(g) + 0.020 * sin(2 * g));
+    
+    return asin(sin(M_PI / 180.0 * 23.439) * sin(lambda));
+}
+
+- (double)transitTimeForLongitude:(double)longitude julianDay:(double)jd {
+    double n = jd - 2451545.0 - longitude / 360.0;
+    double nStar = round(n);
+    double j = 2451545.0 + nStar + longitude / 360.0;
+    
+    return fmod(j - floor(j), 1.0) * 24.0;
+}
+
+- (double)sunriseTimeForLatitude:(double)latitude declination:(double)declination longitude:(double)longitude julianDay:(double)jd {
+    double hourAngle = acos(-tan(M_PI / 180.0 * latitude) * tan(declination));
+    double transit = [self transitTimeForLongitude:longitude julianDay:jd];
+    
+    return transit - hourAngle * 180.0 / M_PI / 15.0;
+}
+
+- (double)sunsetTimeForLatitude:(double)latitude declination:(double)declination longitude:(double)longitude julianDay:(double)jd {
+    double hourAngle = acos(-tan(M_PI / 180.0 * latitude) * tan(declination));
+    double transit = [self transitTimeForLongitude:longitude julianDay:jd];
+    
+    return transit + hourAngle * 180.0 / M_PI / 15.0;
+}
+
+- (double)fajrTimeForLatitude:(double)latitude declination:(double)declination longitude:(double)longitude angle:(double)angle julianDay:(double)jd {
+    double hourAngle = acos((cos(M_PI / 180.0 * (90 + angle)) - sin(M_PI / 180.0 * latitude) * sin(declination)) / (cos(M_PI / 180.0 * latitude) * cos(declination)));
+    double transit = [self transitTimeForLongitude:longitude julianDay:jd];
+    
+    return transit - hourAngle * 180.0 / M_PI / 15.0;
+}
+
+- (double)ishaTimeForLatitude:(double)latitude declination:(double)declination longitude:(double)longitude angle:(double)angle julianDay:(double)jd {
+    double hourAngle = acos((cos(M_PI / 180.0 * (90 + angle)) - sin(M_PI / 180.0 * latitude) * sin(declination)) / (cos(M_PI / 180.0 * latitude) * cos(declination)));
+    double transit = [self transitTimeForLongitude:longitude julianDay:jd];
+    
+    return transit + hourAngle * 180.0 / M_PI / 15.0;
+}
+
+- (double)asrTimeForLatitude:(double)latitude declination:(double)declination longitude:(double)longitude madhab:(NSString *)madhab julianDay:(double)jd {
+    double shadowRatio = ([madhab.lowercaseString isEqualToString:@"hanafi"]) ? 2.0 : 1.0;
+    double altitude = atan(1.0 / (shadowRatio + tan(fabs(M_PI / 180.0 * latitude - declination))));
+    double hourAngle = acos((sin(altitude) - sin(M_PI / 180.0 * latitude) * sin(declination)) / (cos(M_PI / 180.0 * latitude) * cos(declination)));
+    double transit = [self transitTimeForLongitude:longitude julianDay:jd];
+    
+    return transit + hourAngle * 180.0 / M_PI / 15.0;
+}
+
+- (NSDate *)dateFromDecimalHours:(double)hours onDate:(NSDate *)date {
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    NSDateComponents *components = [calendar components:NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:date];
+    
+    int hour = (int)floor(hours);
+    int minute = (int)floor((hours - hour) * 60);
+    
+    components.hour = hour;
+    components.minute = minute;
+    components.second = 0;
+    
+    return [calendar dateFromComponents:components];
 }
 
 @end

@@ -47,11 +47,11 @@ let moduleConfig: ModuleConfig = {
 /**
  * Configure the module behavior
  */
-export function configure(config: Partial<ModuleConfig>): void {
+export async function configure(config: Partial<ModuleConfig>): Promise<void> {
   moduleConfig = { ...moduleConfig, ...config };
 
   try {
-    AdhanTurboModule.setDebugLogging(moduleConfig.enableDebugLogging || false);
+    await AdhanTurboModule.setDebugLogging(moduleConfig.enableDebugLogging || false);
   } catch (error) {
     console.warn('[Adhan] Failed to configure debug logging:', error);
   }
@@ -222,7 +222,7 @@ export async function getPrayerTimes(
     const adjustments = request.parameters?.adjustments
       ? JSON.stringify(request.parameters.adjustments)
       : undefined;
-    
+
     // Prepare custom angles if any angle overrides are specified
     const customAngles = (() => {
       const angles: any = {};
@@ -238,7 +238,9 @@ export async function getPrayerTimes(
       if (request.parameters?.maghribAngle !== undefined) {
         angles.maghribAngle = request.parameters.maghribAngle;
       }
-      return Object.keys(angles).length > 0 ? JSON.stringify(angles) : undefined;
+      return Object.keys(angles).length > 0
+        ? JSON.stringify(angles)
+        : undefined;
     })();
 
     // Call TurboModule with all parameters
@@ -259,7 +261,7 @@ export async function getPrayerTimes(
 
     // Parse the JSON response from native module
     const rawResult = JSON.parse(resultJson);
-    
+
     // Both C++ native and Android fallback now return ISO date strings
     const result: PrayerTimesResult = {
       fajr: rawResult.fajr || '',
@@ -272,13 +274,18 @@ export async function getPrayerTimes(
         method,
         madhab,
         coordinates: request.coordinates,
-        date: typeof request.date === 'string' 
-          ? { 
-              year: parseInt(request.date.split('-')[0] || '0'), 
-              month: parseInt(request.date.split('-')[1] || '0'), 
-              day: parseInt(request.date.split('-')[2] || '0') 
-            }
-          : request.date || { year: new Date().getFullYear(), month: new Date().getMonth() + 1, day: new Date().getDate() },
+        date:
+          typeof request.date === 'string'
+            ? {
+                year: parseInt(request.date.split('-')[0] || '0'),
+                month: parseInt(request.date.split('-')[1] || '0'),
+                day: parseInt(request.date.split('-')[2] || '0'),
+              }
+            : request.date || {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth() + 1,
+                day: new Date().getDate(),
+              },
         hasAdjustments: !!request.parameters?.adjustments,
       },
     };
@@ -363,7 +370,7 @@ export async function getBulkPrayerTimes(
   const adjustments = request.parameters?.adjustments
     ? JSON.stringify(request.parameters.adjustments)
     : undefined;
-  
+
   // Prepare custom angles if any angle overrides are specified
   const customAngles = (() => {
     const angles: any = {};
@@ -383,7 +390,7 @@ export async function getBulkPrayerTimes(
   })();
 
   try {
-    const resultJson = AdhanTurboModule.getBulkPrayerTimes(
+    const resultJson = await AdhanTurboModule.getBulkPrayerTimes(
       request.coordinates.latitude,
       request.coordinates.longitude,
       startDateStr,
@@ -456,9 +463,9 @@ export async function getAvailableMethods(): Promise<MethodInfo[]> {
 /**
  * Get performance metrics
  */
-export function getPerformanceMetrics(): PerformanceMetrics | null {
+export async function getPerformanceMetrics(): Promise<PerformanceMetrics | null> {
   try {
-    const metricsJson = AdhanTurboModule.getPerformanceMetrics();
+    const metricsJson = await AdhanTurboModule.getPerformanceMetrics();
     const metrics = JSON.parse(metricsJson);
     return {
       calculationTime: metrics.lastCalculationTime,
@@ -474,9 +481,9 @@ export function getPerformanceMetrics(): PerformanceMetrics | null {
 /**
  * Simple multiply function for testing TurboModule connectivity
  */
-export function multiply(a: number, b: number): number {
+export async function multiply(a: number, b: number): Promise<number> {
   try {
-    return AdhanTurboModule.multiply(a, b);
+    return await AdhanTurboModule.multiply(a, b);
   } catch (error) {
     throw createError(
       AdhanErrorCode.MODULE_NOT_AVAILABLE,
