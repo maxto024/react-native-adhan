@@ -121,7 +121,8 @@ RCT_REMAP_METHOD(getTimeForPrayer,
 }
 
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(BOOL, validateCoordinates:(NSDictionary *)coordinates) {
-    return [impl validateCoordinatesWithCoordinates:coordinates];
+    NSDictionary *copiedCoordinates = [coordinates copy];
+    return [impl validateCoordinatesWithCoordinates:copiedCoordinates];
 }
 
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods) {
