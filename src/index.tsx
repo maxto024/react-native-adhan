@@ -86,13 +86,19 @@ export function calculatePrayerTimes(
   dateComponents: AdhanDateComponents,
   calculationParameters: AdhanCalculationParameters
 ): Promise<AdhanPrayerTimes> {
-  return NativeAdhan.calculatePrayerTimes(coordinates, dateComponents, calculationParameters);
+  return NativeAdhan.calculatePrayerTimes(
+    coordinates,
+    dateComponents,
+    calculationParameters
+  );
 }
 
 /**
  * Calculate Qibla direction for a location
  */
-export function calculateQibla(coordinates: AdhanCoordinates): Promise<AdhanQibla> {
+export function calculateQibla(
+  coordinates: AdhanCoordinates
+): Promise<AdhanQibla> {
   return NativeAdhan.calculateQibla(coordinates);
 }
 
@@ -104,7 +110,11 @@ export function calculateSunnahTimes(
   dateComponents: AdhanDateComponents,
   calculationParameters: AdhanCalculationParameters
 ): Promise<AdhanSunnahTimes> {
-  return NativeAdhan.calculateSunnahTimes(coordinates, dateComponents, calculationParameters);
+  return NativeAdhan.calculateSunnahTimes(
+    coordinates,
+    dateComponents,
+    calculationParameters
+  );
 }
 
 /**
@@ -117,7 +127,12 @@ export function getCurrentPrayer(
   currentTime?: number
 ): Promise<AdhanCurrentPrayerInfo> {
   const time = currentTime ?? Date.now();
-  return NativeAdhan.getCurrentPrayer(coordinates, dateComponents, calculationParameters, time);
+  return NativeAdhan.getCurrentPrayer(
+    coordinates,
+    dateComponents,
+    calculationParameters,
+    time
+  );
 }
 
 /**
@@ -130,13 +145,20 @@ export function getTimeForPrayer(
   prayer: Prayer | string
 ): Promise<number | null> {
   const prayerName = prayer;
-  return NativeAdhan.getTimeForPrayer(coordinates, dateComponents, calculationParameters, prayerName);
+  return NativeAdhan.getTimeForPrayer(
+    coordinates,
+    dateComponents,
+    calculationParameters,
+    prayerName
+  );
 }
 
 /**
  * Validate coordinates
  */
-export function validateCoordinates(coordinates: AdhanCoordinates): Promise<boolean> {
+export function validateCoordinates(
+  coordinates: AdhanCoordinates
+): Promise<boolean> {
   return NativeAdhan.validateCoordinates(coordinates);
 }
 
@@ -150,7 +172,9 @@ export function getCalculationMethods(): AdhanCalculationMethodInfo[] {
 /**
  * Get default calculation parameters for a method
  */
-export function getMethodParameters(method: CalculationMethod | string): AdhanCalculationParameters {
+export function getMethodParameters(
+  method: CalculationMethod | string
+): AdhanCalculationParameters {
   const methodName = method;
   return NativeAdhan.getMethodParameters(methodName);
 }
@@ -163,8 +187,15 @@ export function calculatePrayerTimesRange(
   startDate: AdhanDateComponents,
   endDate: AdhanDateComponents,
   calculationParameters: AdhanCalculationParameters
-): Promise<Array<{ date: AdhanDateComponents; prayerTimes: AdhanPrayerTimes }>> {
-  return NativeAdhan.calculatePrayerTimesRange(coordinates, startDate, endDate, calculationParameters);
+): Promise<
+  Array<{ date: AdhanDateComponents; prayerTimes: AdhanPrayerTimes }>
+> {
+  return NativeAdhan.calculatePrayerTimesRange(
+    coordinates,
+    startDate,
+    endDate,
+    calculationParameters
+  );
 }
 
 /**
