@@ -117,7 +117,7 @@ RCT_REMAP_METHOD(calculatePrayerTimesRange,
                  rejecter:(RCTPromiseRejectBlock)rejecter) {
     
     // Simplified stub for now
-    resolve(@[]);
+    resolver(@[]);
 }
 
 // --- Synchronous Methods ---
