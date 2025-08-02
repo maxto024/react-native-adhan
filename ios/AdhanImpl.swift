@@ -14,13 +14,17 @@ public class AdhanImpl: NSObject, RCTBridgeModule {
 
   // MARK: - Asynchronous Bridged Methods
 
-  @objc(validateCoordinates:resolver:rejecter:)
+  @objc(validateCoordinates:resolve:reject:)
   public func validateCoordinates(
     _ coordinates: NSDictionary,
-    resolver: @escaping RCTPromiseResolveBlock,
-    rejecter: @escaping RCTPromiseRejectBlock
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
   ) {
-    resolver(validateCoordinatesSync(coordinates))
+    if (validateCoordinatesSync(coordinates)) {
+      resolve(true)
+    } else {
+      resolve(false)
+    }
   }
 
   // Legacy alias for old selector name
