@@ -30,12 +30,12 @@ RCT_EXPORT_MODULE()
 // --- Promise-based (Async) Methods ---
 
 RCT_EXPORT_METHOD(validateCoordinates:(NSDictionary *)coordinates
-                  resolver:(RCTPromiseResolveBlock)resolver
-                  rejecter:(RCTPromiseRejectBlock)rejecter)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   [impl validateCoordinates:coordinates
-                   resolver:resolver
-                   rejecter:rejecter];
+                    resolve:resolve
+                     reject:reject];
 }
 
 RCT_REMAP_METHOD(calculatePrayerTimes,
