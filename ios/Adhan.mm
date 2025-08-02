@@ -120,8 +120,7 @@ RCT_REMAP_METHOD(getTimeForPrayer,
     }
 }
 
-RCT_EXPORT_METHOD(validateCoordinates,
-                  (NSDictionary *)coordinates
+RCT_EXPORT_METHOD(validateCoordinates:(NSDictionary *)coordinates
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
     [impl validateCoordinates:coordinates resolver:resolve rejecter:reject];
