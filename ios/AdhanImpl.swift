@@ -3,180 +3,119 @@ import React
 
 @objc(AdhanImpl)
 public class AdhanImpl: NSObject {
-    
-    @objc public func calculatePrayerTimes(
-        coordinates: [String: Double],
-        dateComponents: [String: Int],
-        calculationParameters: [String: Any]
-    ) -> [String: Any]? {
-        
-        guard let lat = coordinates["latitude"], let lon = coordinates["longitude"] else {
-            return nil
-        }
-        
-        guard let year = dateComponents["year"], let month = dateComponents["month"], let day = dateComponents["day"] else {
-            return nil
-        }
-        
-        do {
-            let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
-            let adhanParams = getCalculationParameters(from: calculationParameters)
-            
-            var adhanDateComponents = DateComponents()
-            adhanDateComponents.year = year
-            adhanDateComponents.month = month
-            adhanDateComponents.day = day
-            
-            guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams) else {
-                return nil
-            }
-            
-            return [
-                "fajr": prayerTimes.fajr.timeIntervalSince1970 * 1000,
-                "sunrise": prayerTimes.sunrise.timeIntervalSince1970 * 1000,
-                "dhuhr": prayerTimes.dhuhr.timeIntervalSince1970 * 1000,
-                "asr": prayerTimes.asr.timeIntervalSince1970 * 1000,
-                "maghrib": prayerTimes.maghrib.timeIntervalSince1970 * 1000,
-                "isha": prayerTimes.isha.timeIntervalSince1970 * 1000
-            ]
-        } catch {
-            return nil
-        }
-    }
-    
-    @objc public func calculateQibla(coordinates: [String: Double]) -> [String: Any]? {
-        guard let lat = coordinates["latitude"], let lon = coordinates["longitude"] else {
-            return nil
-        }
-        
-        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
-        let qibla = Qibla(coordinates: adhanCoordinates)
-        
-        return ["direction": qibla.direction]
-    }
-    
-    @objc public func calculateSunnahTimes(
-        coordinates: [String: Double],
-        dateComponents: [String: Int],
-        calculationParameters: [String: Any]
-    ) -> [String: Any]? {
-        
-        guard let lat = coordinates["latitude"], let lon = coordinates["longitude"] else {
-            return nil
-        }
-        
-        guard let year = dateComponents["year"], let month = dateComponents["month"], let day = dateComponents["day"] else {
-            return nil
-        }
-        
-        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
-        let adhanParams = getCalculationParameters(from: calculationParameters)
-        
-        var adhanDateComponents = DateComponents()
-        adhanDateComponents.year = year
-        adhanDateComponents.month = month
-        adhanDateComponents.day = day
-        
-        guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams),
-              let sunnahTimes = SunnahTimes(from: prayerTimes) else {
-            return nil
-        }
-        
-        return [
-            "middleOfTheNight": sunnahTimes.middleOfTheNight.timeIntervalSince1970 * 1000,
-            "lastThirdOfTheNight": sunnahTimes.lastThirdOfTheNight.timeIntervalSince1970 * 1000
-        ]
-    }
-    
-    @objc public func getCurrentPrayer(
-        coordinates: [String: Double],
-        dateComponents: [String: Int],
-        calculationParameters: [String: Any],
-        currentTime: Double
-    ) -> [String: String]? {
-        
-        guard let lat = coordinates["latitude"], let lon = coordinates["longitude"] else {
-            return nil
-        }
-        
-        guard let year = dateComponents["year"], let month = dateComponents["month"], let day = dateComponents["day"] else {
-            return nil
-        }
-        
-        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
-        let adhanParams = getCalculationParameters(from: calculationParameters)
-        
-        var adhanDateComponents = DateComponents()
-        adhanDateComponents.year = year
-        adhanDateComponents.month = month
-        adhanDateComponents.day = day
-        
-        guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams) else {
-            return nil
-        }
-        
-        let currentDate = Date(timeIntervalSince1970: currentTime / 1000)
-        let currentPrayer = prayerTimes.currentPrayer(at: currentDate)
-        let nextPrayer = prayerTimes.nextPrayer(at: currentDate)
-        
-        return [
-            "current": currentPrayer?.rawValue ?? "none",
-            "next": nextPrayer?.rawValue ?? "none"
-        ]
-    }
-    
-    @objc public func getTimeForPrayer(
-        coordinates: [String: Double],
-        dateComponents: [String: Int],
-        calculationParameters: [String: Any],
-        prayer: String
-    ) -> NSNumber? {
-        
-        guard let lat = coordinates["latitude"], let lon = coordinates["longitude"] else {
-            return nil
-        }
-        
-        guard let year = dateComponents["year"], let month = dateComponents["month"], let day = dateComponents["day"] else {
-            return nil
-        }
-        
-        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
-        let adhanParams = getCalculationParameters(from: calculationParameters)
-        
-        var adhanDateComponents = DateComponents()
-        adhanDateComponents.year = year
-        adhanDateComponents.month = month
-        adhanDateComponents.day = day
-        
-        guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams) else {
-            return nil
-        }
-        
-        guard let prayerEnum = Prayer(rawValue: prayer) else {
-            return nil
-        }
-        
-        let time = prayerTimes.time(for: prayerEnum)
-        return NSNumber(value: time.timeIntervalSince1970 * 1000)
-    }
-    
-    private func validateCoordinates(coordinates: NSDictionary) -> Bool {
-      guard let lat = coordinates["latitude"] as? Double,
-            let lon = coordinates["longitude"] as? Double else { return false }
-      return (-90...90).contains(lat) && (-180...180).contains(lon)
-    }
 
-    @objc(validateCoordinatesAsync:resolver:rejecter:)
-    public func validateCoordinates(
-      _ coordinates: NSDictionary,
-      resolver: RCTPromiseResolveBlock,
-      rejecter: RCTPromiseRejectBlock
-    ) {
-      let valid = validateCoordinates(coordinates: coordinates)
-      resolver(valid)
+  // ✅ 1. Async version of validateCoordinates for Promise bridging
+  @objc(validateCoordinatesWithCoordinates:resolver:rejecter:)
+  public func validateCoordinates(
+    _ coordinates: NSDictionary,
+    resolver: @escaping RCTPromiseResolveBlock,
+    rejecter: @escaping RCTPromiseRejectBlock
+  ) {
+    let isValid = validateCoordinatesSync(coordinates)
+    resolver(isValid)
+  }
+
+  // ✅ 2. Sync-only helper (used in Swift and Swift-only preview)
+  @objc(validateCoordinatesWithCoordinates:)
+  public func validateCoordinatesSync(_ coordinates: NSDictionary) -> Bool {
+    guard
+      let lat = coordinates["latitude"] as? Double,
+      let lon = coordinates["longitude"] as? Double
+    else {
+      return false
     }
-    
-    @objc public func getCalculationMethods() -> [[String: Any]] {
+    return (-90...90).contains(lat) && (-180...180).contains(lon)
+  }
+
+  // ✅ 3. Async version of calculatePrayerTimes:
+  @objc(calculatePrayerTimesWithCoordinates:dateComponents:calculationParameters:resolver:rejecter:)
+  public func calculatePrayerTimes(
+    _ coordinates: NSDictionary,
+    dateComponents: NSDictionary,
+    calculationParameters: NSDictionary,
+    resolver: @escaping RCTPromiseResolveBlock,
+    rejecter: @escaping RCTPromiseRejectBlock
+  ) {
+    if let result = calculatePrayerTimesSync(coordinates, dateComponents: dateComponents, calculationParameters: calculationParameters) {
+      resolver(result)
+    } else {
+      rejecter("CALCULATION_ERROR", "Failed to calculate prayer times.", nil)
+    }
+  }
+
+  @objc(calculateQiblaWithCoordinates:resolver:rejecter:)
+  public func calculateQibla(
+    _ coordinates: NSDictionary,
+    resolver: @escaping RCTPromiseResolveBlock,
+    rejecter: @escaping RCTPromiseRejectBlock
+  ) {
+    if let result = calculateQiblaSync(coordinates) {
+      resolver(result)
+    } else {
+      rejecter("INVALID_COORDINATES", "Latitude and longitude are required.", nil)
+    }
+  }
+
+  @objc(calculateSunnahTimesWithCoordinates:dateComponents:calculationParameters:resolver:rejecter:)
+  public func calculateSunnahTimes(
+    _ coordinates: NSDictionary,
+    dateComponents: NSDictionary,
+    calculationParameters: NSDictionary,
+    resolver: @escaping RCTPromiseResolveBlock,
+    rejecter: @escaping RCTPromiseRejectBlock
+  ) {
+    if let result = calculateSunnahTimesSync(coordinates, dateComponents: dateComponents, calculationParameters: calculationParameters) {
+      resolver(result)
+    } else {
+      rejecter("CALCULATION_ERROR", "Failed to calculate sunnah times.", nil)
+    }
+  }
+
+  @objc(getCurrentPrayerWithCoordinates:dateComponents:calculationParameters:currentTime:resolver:rejecter:)
+  public func getCurrentPrayer(
+    _ coordinates: NSDictionary,
+    dateComponents: NSDictionary,
+    calculationParameters: NSDictionary,
+    currentTime: NSNumber,
+    resolver: @escaping RCTPromiseResolveBlock,
+    rejecter: @escaping RCTPromiseRejectBlock
+  ) {
+    if let result = getCurrentPrayerSync(
+      coordinates,
+      dateComponents: dateComponents,
+      calculationParameters: calculationParameters,
+      currentTimeMs: currentTime.doubleValue
+    ) {
+      resolver(result)
+    } else {
+      rejecter("CALCULATION_ERROR", "Failed to calculate current prayer.", nil)
+    }
+  }
+
+  @objc(getTimeForPrayerWithCoordinates:dateComponents:calculationParameters:prayer:resolver:rejecter:)
+  public func getTimeForPrayer(
+    _ coordinates: NSDictionary,
+    dateComponents: NSDictionary,
+    calculationParameters: NSDictionary,
+    prayer: NSString,
+    resolver: @escaping RCTPromiseResolveBlock,
+    rejecter: @escaping RCTPromiseRejectBlock
+  ) {
+    if let ts = getTimeForPrayerSync(
+      coordinates,
+      dateComponents: dateComponents,
+      calculationParameters: calculationParameters,
+      prayer: prayer as String
+    ) {
+      resolver(ts)
+    } else {
+      rejecter("INVALID_PRAYER", "Invalid prayer name or calculation failed.", nil)
+    }
+  }
+
+  // Keep these as sync exports using `RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD`:
+    @objc(getCalculationMethods)
+    public func getCalculationMethods() -> [[String: Any]] {
         return [
             [
                 "name": "muslimWorldLeague",
@@ -212,16 +151,15 @@ public class AdhanImpl: NSObject {
             ]
         ]
     }
-    
-    @objc(getMethodParameters:resolver:rejecter:)
-    public func getMethodParameters(method: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        guard let calculationMethod = CalculationMethod.fromString(method) else {
-            rejecter("INVALID_METHOD", "Invalid calculation method.", nil)
-            return
+
+    @objc(getMethodParameters:)
+    public func getMethodParameters(_ method: NSString) -> [String: Any]? {
+        guard let calculationMethod = CalculationMethod.fromString(method as String) else {
+            return nil
         }
-        
+
         let params = CalculationParameters(method: calculationMethod)
-        let result: [String: Any] = [
+        return [
             "method": method,
             "fajrAngle": params.fajrAngle,
             "ishaAngle": params.ishaAngle,
@@ -231,18 +169,161 @@ public class AdhanImpl: NSObject {
             "rounding": params.rounding.rawValue,
             "shafaq": params.shafaq.rawValue
         ]
-        resolver(result)
     }
-    
-    @objc public func getLibraryInfo() -> [String: String] {
+
+    @objc(getLibraryInfo)
+    public func getLibraryInfo() -> [String: String] {
         return [
             "version": "0.1.0",
             "swiftLibraryVersion": "2.0.0",
             "platform": "iOS"
         ]
     }
-    
-    // MARK: - Private Helpers
+
+  // --- your existing internal sync implementations --- //
+    private func calculatePrayerTimesSync(
+        _ coordinates: NSDictionary,
+        dateComponents: NSDictionary,
+        calculationParameters: NSDictionary
+    ) -> [String: Any]? {
+        guard let lat = coordinates["latitude"] as? Double,
+              let lon = coordinates["longitude"] as? Double,
+              let year = dateComponents["year"] as? Int,
+              let month = dateComponents["month"] as? Int,
+              let day = dateComponents["day"] as? Int else {
+            return nil
+        }
+
+        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
+        var adhanDateComponents = DateComponents()
+        adhanDateComponents.year = year
+        adhanDateComponents.month = month
+        adhanDateComponents.day = day
+
+        let adhanParams = getCalculationParameters(from: calculationParameters as! [String : Any])
+
+        guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams) else {
+            return nil
+        }
+
+        return [
+            "fajr": prayerTimes.fajr.timeIntervalSince1970 * 1000,
+            "sunrise": prayerTimes.sunrise.timeIntervalSince1970 * 1000,
+            "dhuhr": prayerTimes.dhuhr.timeIntervalSince1970 * 1000,
+            "asr": prayerTimes.asr.timeIntervalSince1970 * 1000,
+            "maghrib": prayerTimes.maghrib.timeIntervalSince1970 * 1000,
+            "isha": prayerTimes.isha.timeIntervalSince1970 * 1000
+        ]
+    }
+
+    private func calculateQiblaSync(_ coordinates: NSDictionary) -> [String: Any]? {
+        guard let lat = coordinates["latitude"] as? Double,
+              let lon = coordinates["longitude"] as? Double else {
+            return nil
+        }
+        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
+        let qibla = Qibla(coordinates: adhanCoordinates)
+        return ["direction": qibla.direction]
+    }
+
+    private func calculateSunnahTimesSync(
+        _ coordinates: NSDictionary,
+        dateComponents: NSDictionary,
+        calculationParameters: NSDictionary
+    ) -> [String: Any]? {
+        guard let lat = coordinates["latitude"] as? Double,
+              let lon = coordinates["longitude"] as? Double,
+              let year = dateComponents["year"] as? Int,
+              let month = dateComponents["month"] as? Int,
+              let day = dateComponents["day"] as? Int else {
+            return nil
+        }
+
+        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
+        var adhanDateComponents = DateComponents()
+        adhanDateComponents.year = year
+        adhanDateComponents.month = month
+        adhanDateComponents.day = day
+
+        let adhanParams = getCalculationParameters(from: calculationParameters as! [String : Any])
+
+        guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams),
+              let sunnahTimes = SunnahTimes(from: prayerTimes) else {
+            return nil
+        }
+
+        return [
+            "middleOfTheNight": sunnahTimes.middleOfTheNight.timeIntervalSince1970 * 1000,
+            "lastThirdOfTheNight": sunnahTimes.lastThirdOfTheNight.timeIntervalSince1970 * 1000
+        ]
+    }
+
+    private func getCurrentPrayerSync(
+        _ coordinates: NSDictionary,
+        dateComponents: NSDictionary,
+        calculationParameters: NSDictionary,
+        currentTimeMs: Double
+    ) -> [String: String]? {
+        guard let lat = coordinates["latitude"] as? Double,
+              let lon = coordinates["longitude"] as? Double,
+              let year = dateComponents["year"] as? Int,
+              let month = dateComponents["month"] as? Int,
+              let day = dateComponents["day"] as? Int else {
+            return nil
+        }
+
+        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
+        var adhanDateComponents = DateComponents()
+        adhanDateComponents.year = year
+        adhanDateComponents.month = month
+        adhanDateComponents.day = day
+
+        let adhanParams = getCalculationParameters(from: calculationParameters as! [String : Any])
+
+        guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams) else {
+            return nil
+        }
+
+        let currentDate = Date(timeIntervalSince1970: currentTimeMs / 1000)
+        let currentPrayer = prayerTimes.currentPrayer(at: currentDate)
+        let nextPrayer = prayerTimes.nextPrayer(at: currentDate)
+
+        return [
+            "current": currentPrayer?.rawValue ?? "none",
+            "next": nextPrayer?.rawValue ?? "none"
+        ]
+    }
+
+    private func getTimeForPrayerSync(
+        _ coordinates: NSDictionary,
+        dateComponents: NSDictionary,
+        calculationParameters: NSDictionary,
+        prayer: String
+    ) -> NSNumber? {
+        guard let lat = coordinates["latitude"] as? Double,
+              let lon = coordinates["longitude"] as? Double,
+              let year = dateComponents["year"] as? Int,
+              let month = dateComponents["month"] as? Int,
+              let day = dateComponents["day"] as? Int else {
+            return nil
+        }
+
+        let adhanCoordinates = Coordinates(latitude: lat, longitude: lon)
+        var adhanDateComponents = DateComponents()
+        adhanDateComponents.year = year
+        adhanDateComponents.month = month
+        adhanDateComponents.day = day
+
+        let adhanParams = getCalculationParameters(from: calculationParameters as! [String : Any])
+
+        guard let prayerTimes = PrayerTimes(coordinates: adhanCoordinates, date: adhanDateComponents, calculationParameters: adhanParams),
+              let prayerEnum = Prayer(rawValue: prayer) else {
+            return nil
+        }
+
+        let time = prayerTimes.time(for: prayerEnum)
+        return NSNumber(value: time.timeIntervalSince1970 * 1000)
+    }
     
     private func getCalculationParameters(from params: [String: Any]) -> CalculationParameters {
         return CalculationParameters(method: .muslimWorldLeague)
