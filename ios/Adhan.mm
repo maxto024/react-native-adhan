@@ -128,8 +128,12 @@ RCT_REMAP_METHOD(validateCoordinates,
     resolve(@(isValid));
 }
 
-RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods) {
-    return [impl getCalculationMethods];
+RCT_REMAP_METHOD(validateCoordinates,
+                 validateCoordinatesWithCoordinates:(NSDictionary *)coordinates
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+    BOOL isValid = [impl validateCoordinates:coordinates];
+    resolve(@(isValid));
 }
 
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getMethodParameters:(NSString *)method) {
