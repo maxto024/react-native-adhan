@@ -47,10 +47,86 @@ static BACalculationParameters *paramsFromDictionary(NSDictionary *dict) {
     NSString *methodName = dict[@"method"];
     BACalculationMethod method = calculationMethodFromString(methodName);
     BACalculationParameters *params = [[BACalculationParameters alloc] initWithMethod:method];
-    if (method == BACalculationMethodOther) {
-        if (dict[@"fajrAngle"]) params.fajrAngle = [dict[@"fajrAngle"] doubleValue];
-        if (dict[@"ishaAngle"]) params.ishaAngle = [dict[@"ishaAngle"] doubleValue];
+    
+    // Apply custom parameters if provided
+    if (dict[@"fajrAngle"]) {
+        params.fajrAngle = [dict[@"fajrAngle"] doubleValue];
     }
+    if (dict[@"ishaAngle"]) {
+        params.ishaAngle = [dict[@"ishaAngle"] doubleValue];
+    }
+    if (dict[@"ishaInterval"]) {
+        params.ishaInterval = [dict[@"ishaInterval"] intValue];
+    }
+    if (dict[@"madhab"]) {
+        NSString *madhab = dict[@"madhab"];
+        if ([madhab isEqualToString:@"hanafi"]) {
+            params.madhab = BAMadhabHanafi;
+        } else {
+            params.madhab = BAMadhabShafi;
+        }
+    }
+    if (dict[@"rounding"]) {
+        NSString *rounding = dict[@"rounding"];
+        if ([rounding isEqualToString:@"up"]) {
+            params.rounding = BARoundingUp;
+        } else if ([rounding isEqualToString:@"none"]) {
+            params.rounding = BARoundingNone;
+        } else {
+            params.rounding = BARoundingNearest;
+        }
+    }
+    if (dict[@"shafaq"]) {
+        NSString *shafaq = dict[@"shafaq"];
+        if ([shafaq isEqualToString:@"ahmer"]) {
+            params.shafaq = BAShafaqAhmer;
+        } else if ([shafaq isEqualToString:@"abyad"]) {
+            params.shafaq = BAShafaqAbyad;
+        } else {
+            params.shafaq = BAShafaqGeneral;
+        }
+    }
+    if (dict[@"highLatitudeRule"]) {
+        NSString *rule = dict[@"highLatitudeRule"];
+        if ([rule isEqualToString:@"middleOfTheNight"]) {
+            params.highLatitudeRule = BAHighLatitudeRuleMiddleOfTheNight;
+        } else if ([rule isEqualToString:@"seventhOfTheNight"]) {
+            params.highLatitudeRule = BAHighLatitudeRuleSeventhOfTheNight;
+        } else if ([rule isEqualToString:@"twilightAngle"]) {
+            params.highLatitudeRule = BAHighLatitudeRuleTwilightAngle;
+        }
+    }
+    if (dict[@"maghribAngle"]) {
+        params.maghribAngle = [dict[@"maghribAngle"] doubleValue];
+    }
+    
+    // Apply prayer adjustments
+    if (dict[@"prayerAdjustments"]) {
+        NSDictionary *adjustments = dict[@"prayerAdjustments"];
+        int fajr = adjustments[@"fajr"] ? [adjustments[@"fajr"] intValue] : 0;
+        int sunrise = adjustments[@"sunrise"] ? [adjustments[@"sunrise"] intValue] : 0;
+        int dhuhr = adjustments[@"dhuhr"] ? [adjustments[@"dhuhr"] intValue] : 0;
+        int asr = adjustments[@"asr"] ? [adjustments[@"asr"] intValue] : 0;
+        int maghrib = adjustments[@"maghrib"] ? [adjustments[@"maghrib"] intValue] : 0;
+        int isha = adjustments[@"isha"] ? [adjustments[@"isha"] intValue] : 0;
+        BAPrayerAdjustments *prayerAdj = [[BAPrayerAdjustments alloc] initWithFajr:fajr sunrise:sunrise dhuhr:dhuhr asr:asr maghrib:maghrib isha:isha];
+        params.adjustments = prayerAdj;
+    }
+    
+    // Apply method adjustments
+    if (dict[@"methodAdjustments"]) {
+        NSDictionary *adjustments = dict[@"methodAdjustments"];
+        int fajr = adjustments[@"fajr"] ? [adjustments[@"fajr"] intValue] : 0;
+        int sunrise = adjustments[@"sunrise"] ? [adjustments[@"sunrise"] intValue] : 0;
+        int dhuhr = adjustments[@"dhuhr"] ? [adjustments[@"dhuhr"] intValue] : 0;
+        int asr = adjustments[@"asr"] ? [adjustments[@"asr"] intValue] : 0;
+        int maghrib = adjustments[@"maghrib"] ? [adjustments[@"maghrib"] intValue] : 0;
+        int isha = adjustments[@"isha"] ? [adjustments[@"isha"] intValue] : 0;
+        // Note: methodAdjustments is private in BACalculationParameters, 
+        // so they're automatically applied when using initWithMethod:
+        // BAPrayerAdjustments *methodAdj = [[BAPrayerAdjustments alloc] initWithFajr:fajr sunrise:sunrise dhuhr:dhuhr asr:asr maghrib:maghrib isha:isha];
+    }
+    
     return params;
 }
 
@@ -107,10 +183,94 @@ RCT_EXPORT_METHOD(calculateQibla:(NSDictionary *)coordinates
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods)
 {
     return @[
-        @{@"name": @"muslimWorldLeague"}, @{@"name": @"egyptian"}, @{@"name": @"karachi"},
-        @{@"name": @"ummAlQura"}, @{@"name": @"dubai"}, @{@"name": @"moonsightingCommittee"},
-        @{@"name": @"northAmerica"}, @{@"name": @"kuwait"}, @{@"name": @"qatar"},
-        @{@"name": @"singapore"}, @{@"name": @"tehran"}, @{@"name": @"turkey"}, @{@"name": @"other"}
+        @{
+            @"name": @"muslimWorldLeague",
+            @"displayName": @"Muslim World League",
+            @"fajrAngle": @18.0,
+            @"ishaAngle": @17.0,
+            @"ishaInterval": @0,
+            @"description": @"Standard Fajr time with an angle of 18°. Earlier Isha time with an angle of 17°."
+        },
+        @{
+            @"name": @"egyptian",
+            @"displayName": @"Egyptian General Authority of Survey",
+            @"fajrAngle": @19.5,
+            @"ishaAngle": @17.5,
+            @"ishaInterval": @0,
+            @"description": @"Early Fajr time using an angle 19.5° and a slightly earlier Isha time using an angle of 17.5°."
+        },
+        @{
+            @"name": @"karachi",
+            @"displayName": @"University of Islamic Sciences, Karachi",
+            @"fajrAngle": @18.0,
+            @"ishaAngle": @18.0,
+            @"ishaInterval": @0,
+            @"description": @"A generally applicable method that uses standard Fajr and Isha angles of 18°."
+        },
+        @{
+            @"name": @"ummAlQura",
+            @"displayName": @"Umm al-Qura University, Makkah",
+            @"fajrAngle": @18.5,
+            @"ishaAngle": @0.0,
+            @"ishaInterval": @90,
+            @"description": @"Uses a fixed interval of 90 minutes from maghrib to calculate Isha. Note: you should add a +30 minute custom adjustment for Isha during Ramadan."
+        },
+        @{
+            @"name": @"dubai",
+            @"displayName": @"UAE",
+            @"fajrAngle": @18.2,
+            @"ishaAngle": @18.2,
+            @"ishaInterval": @0,
+            @"description": @"Used in the UAE. Slightly earlier Fajr time and slightly later Isha time with angles of 18.2°."
+        },
+        @{
+            @"name": @"moonsightingCommittee",
+            @"displayName": @"Moonsighting Committee",
+            @"fajrAngle": @18.0,
+            @"ishaAngle": @18.0,
+            @"ishaInterval": @0,
+            @"description": @"Method developed by Khalid Shaukat. Uses standard 18° angles for Fajr and Isha in addition to seasonal adjustment values."
+        },
+        @{
+            @"name": @"northAmerica",
+            @"displayName": @"ISNA",
+            @"fajrAngle": @15.0,
+            @"ishaAngle": @15.0,
+            @"ishaInterval": @0,
+            @"description": @"Also known as the ISNA method. Gives later Fajr times and early Isha times with angles of 15°."
+        },
+        @{
+            @"name": @"kuwait",
+            @"displayName": @"Kuwait",
+            @"fajrAngle": @18.0,
+            @"ishaAngle": @17.5,
+            @"ishaInterval": @0,
+            @"description": @"Standard Fajr time with an angle of 18°. Slightly earlier Isha time with an angle of 17.5°."
+        },
+        @{
+            @"name": @"qatar",
+            @"displayName": @"Qatar",
+            @"fajrAngle": @18.0,
+            @"ishaAngle": @0.0,
+            @"ishaInterval": @90,
+            @"description": @"Same Isha interval as Umm al-Qura but with the standard Fajr time using an angle of 18°."
+        },
+        @{
+            @"name": @"singapore",
+            @"displayName": @"Singapore",
+            @"fajrAngle": @20.0,
+            @"ishaAngle": @18.0,
+            @"ishaInterval": @0,
+            @"description": @"Used in Singapore, Malaysia, and Indonesia. Early Fajr time with an angle of 20° and standard Isha time with an angle of 18°."
+        },
+        @{
+            @"name": @"turkey",
+            @"displayName": @"Diyanet İşleri Başkanlığı, Turkey",
+            @"fajrAngle": @18.0,
+            @"ishaAngle": @17.0,
+            @"ishaInterval": @0,
+            @"description": @"An approximation of the Diyanet method used in Turkey."
+        }
     ];
 }
 
@@ -123,7 +283,11 @@ RCT_EXPORT_METHOD(getMethodParameters:(NSString *)method
         @"method": method,
         @"fajrAngle": @(params.fajrAngle),
         @"ishaAngle": @(params.ishaAngle),
-        @"ishaInterval": @(params.ishaInterval)
+        @"ishaInterval": @(params.ishaInterval),
+        @"madhab": (params.madhab == BAMadhabHanafi) ? @"hanafi" : @"shafi",
+        @"rounding": (params.rounding == BARoundingUp) ? @"up" : @"nearest",
+        @"shafaq": (params.shafaq == BAShafaqAhmer) ? @"ahmer" : 
+                   (params.shafaq == BAShafaqAbyad) ? @"abyad" : @"general"
     };
     resolve(result);
 }
