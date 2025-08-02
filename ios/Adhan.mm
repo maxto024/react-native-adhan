@@ -124,7 +124,7 @@ RCT_REMAP_METHOD(validateCoordinates,
                  validateCoordinatesWithCoordinates:(NSDictionary *)coordinates
                  resolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject) {
-    BOOL isValid = [impl validateCoordinatesWithCoordinates:coordinates];
+    BOOL isValid = [impl validateCoordinates:coordinates];
     resolve(@(isValid));
 }
 
