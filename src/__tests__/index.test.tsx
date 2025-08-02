@@ -236,6 +236,23 @@ describe('react-native-adhan', () => {
     });
   });
 
+  describe('getLibraryInfo', () => {
+    it('should return library information', () => {
+      const mockInfo = {
+        version: '0.1.0',
+        swiftLibraryVersion: '2.0.0',
+        platform: 'iOS',
+      };
+
+      mockNativeAdhan.getLibraryInfo.mockReturnValue(mockInfo);
+
+      const result = getLibraryInfo();
+
+      expect(result).toEqual(mockInfo);
+      expect(mockNativeAdhan.getLibraryInfo).toHaveBeenCalled();
+    });
+  });
+
   describe('utility functions', () => {
     describe('dateComponentsFromDate', () => {
       it('should convert JavaScript Date to date components', () => {
