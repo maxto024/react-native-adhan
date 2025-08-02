@@ -139,7 +139,7 @@ export interface Spec extends TurboModule {
    * @param coordinates Location coordinates to validate
    * @returns true if coordinates are valid, false otherwise
    */
-  validateCoordinates(coordinates: AdhanCoordinates): boolean;
+  validateCoordinates(coordinates: AdhanCoordinates): Promise<boolean>;
 
   /**
    * Get all available calculation methods

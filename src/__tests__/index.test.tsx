@@ -36,10 +36,10 @@ describe('react-native-adhan', () => {
   });
 
   describe('validateCoordinates', () => {
-    it('should validate correct coordinates', () => {
-      mockNativeAdhan.validateCoordinates.mockReturnValue(true);
+    it('should validate correct coordinates', async () => {
+      mockNativeAdhan.validateCoordinates.mockResolvedValue(true);
       
-      const result = validateCoordinates({ latitude: 21.4225, longitude: 39.8262 });
+      const result = await validateCoordinates({ latitude: 21.4225, longitude: 39.8262 });
       
       expect(result).toBe(true);
       expect(mockNativeAdhan.validateCoordinates).toHaveBeenCalledWith({
@@ -48,10 +48,10 @@ describe('react-native-adhan', () => {
       });
     });
 
-    it('should invalidate incorrect coordinates', () => {
-      mockNativeAdhan.validateCoordinates.mockReturnValue(false);
+    it('should invalidate incorrect coordinates', async () => {
+      mockNativeAdhan.validateCoordinates.mockResolvedValue(false);
       
-      const result = validateCoordinates({ latitude: 100, longitude: 200 });
+      const result = await validateCoordinates({ latitude: 100, longitude: 200 });
       
       expect(result).toBe(false);
     });

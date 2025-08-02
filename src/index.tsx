@@ -136,7 +136,7 @@ export function getTimeForPrayer(
 /**
  * Validate coordinates
  */
-export function validateCoordinates(coordinates: AdhanCoordinates): boolean {
+export function validateCoordinates(coordinates: AdhanCoordinates): Promise<boolean> {
   return NativeAdhan.validateCoordinates(coordinates);
 }
 
