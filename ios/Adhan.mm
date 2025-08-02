@@ -129,7 +129,7 @@ RCT_REMAP_METHOD(validateCoordinates,
 }
 
 RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getMethodParameters:(NSString *)method) {
-    NSDictionary *result = [impl getMethodParametersWithMethod:method];
+    NSDictionary *result = [impl getMethodParameters:method];
     return result ?: @{};
 }
 
