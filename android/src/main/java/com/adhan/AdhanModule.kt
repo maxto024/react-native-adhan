@@ -349,15 +349,6 @@ class AdhanModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  override fun validateCoordinates(coordinates: ReadableMap): Boolean {
-    return try {
-      val latitude = coordinates.getDouble("latitude")
-      val longitude = coordinates.getDouble("longitude")
-      latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0
-    } catch (e: Exception) {
-      false
-    }
-  }
 
   override fun getCalculationMethods(): WritableArray {
     val methods = WritableNativeArray()
@@ -468,7 +459,7 @@ class AdhanModule(reactContext: ReactApplicationContext) :
     return methods
   }
 
-  override fun getMethodParameters(method: String): WritableMap {
+  override fun getMethodParameters(method: String, promise: Promise) {
     val params = when (method) {
       "muslimWorldLeague" -> CalculationMethod.MUSLIM_WORLD_LEAGUE.parameters
       "egyptian" -> CalculationMethod.EGYPTIAN.parameters
@@ -484,7 +475,7 @@ class AdhanModule(reactContext: ReactApplicationContext) :
       else -> CalculationMethod.OTHER.parameters
     }
 
-    return WritableNativeMap().apply {
+    val result = WritableNativeMap().apply {
       putString("method", method)
       putDouble("fajrAngle", params.fajrAngle)
       putDouble("ishaAngle", params.ishaAngle)
@@ -500,6 +491,7 @@ class AdhanModule(reactContext: ReactApplicationContext) :
         else -> "general"
       })
     }
+    promise.resolve(result)
   }
 
   override fun calculatePrayerTimesRange(
