@@ -160,7 +160,6 @@ public class AdhanImpl: NSObject {
         return NSNumber(value: time.timeIntervalSince1970 * 1000)
     }
     
-    @objc(validateCoordinates:)
     public func validateCoordinates(coordinates: NSDictionary) -> Bool {
         guard
             let lat = coordinates["latitude"] as? Double,
@@ -171,8 +170,7 @@ public class AdhanImpl: NSObject {
         return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
     }
     
-    @objc(getCalculationMethods)
-    public func getCalculationMethods() -> [[String: Any]] {
+    @objc public func getCalculationMethods() -> [[String: Any]] {
         return [
             [
                 "name": "muslimWorldLeague",
@@ -209,8 +207,7 @@ public class AdhanImpl: NSObject {
         ]
     }
     
-    @objc(getMethodParameters:)
-    public func getMethodParameters(method: String) -> [String: Any]? {
+    @objc public func getMethodParameters(method: String) -> [String: Any]? {
         guard let calculationMethod = CalculationMethod.fromString(method) else {
             return nil
         }
@@ -228,8 +225,7 @@ public class AdhanImpl: NSObject {
         ]
     }
     
-    @objc(getLibraryInfo)
-    public func getLibraryInfo() -> [String: String] {
+    @objc public func getLibraryInfo() -> [String: String] {
         return [
             "version": "0.1.0",
             "swiftLibraryVersion": "2.0.0",
