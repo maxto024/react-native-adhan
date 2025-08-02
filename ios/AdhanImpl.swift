@@ -160,8 +160,12 @@ public class AdhanImpl: NSObject {
         return NSNumber(value: time.timeIntervalSince1970 * 1000)
     }
     
-    @objc(validateCoordinates:resolver:rejecter:)
-    func validateCoordinates(coordinates: NSDictionary, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+    @objc(validateCoordinatesWithCoordinates:resolver:rejecter:)
+    public func validateCoordinates(
+      coordinates: NSDictionary,
+      resolver: RCTPromiseResolveBlock,
+      rejecter: RCTPromiseRejectBlock
+    ) {
         guard
             let lat = coordinates["latitude"] as? Double,
             let lon = coordinates["longitude"] as? Double
