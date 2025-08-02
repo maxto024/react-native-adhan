@@ -162,7 +162,15 @@ public class AdhanImpl: NSObject {
     
     @objc(validateCoordinates:resolver:rejecter:)
     func validateCoordinates(coordinates: NSDictionary, resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
-        resolver(true)
+        guard
+            let lat = coordinates["latitude"] as? Double,
+            let lon = coordinates["longitude"] as? Double
+        else {
+            resolver(false)
+            return
+        }
+        let isValid = lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
+        resolver(isValid)
     }
     
     @objc public func getCalculationMethods() -> [[String: Any]] {
