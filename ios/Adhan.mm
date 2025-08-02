@@ -3,70 +3,18 @@
 #import <React/RCTLog.h>
 #import "Adhan-Swift.h"
 
-// Helper function to convert NSDictionary to BACoordinates
-static BACoordinates *coordinatesFromDictionary(NSDictionary *dict) {
-    if (!dict || ![dict isKindOfClass:[NSDictionary class]]) return nil;
-    NSNumber *latitude = dict[@"latitude"];
-    NSNumber *longitude = dict[@"longitude"];
-    if (!latitude || !longitude) return nil;
-    return [[BACoordinates alloc] initWithLatitude:[latitude doubleValue] longitude:[longitude doubleValue]];
+@implementation Adhan {
+    AdhanBridge *impl;
 }
-
-// Helper function to convert NSDictionary to NSDateComponents
-static NSDateComponents *dateComponentsFromDictionary(NSDictionary *dict) {
-    if (!dict || ![dict isKindOfClass:[NSDictionary class]]) return nil;
-    NSNumber *year = dict[@"year"];
-    NSNumber *month = dict[@"month"];
-    NSNumber *day = dict[@"day"];
-    if (!year || !month || !day) return nil;
-    
-    NSDateComponents *components = [[NSDateComponents alloc] init];
-    components.year = [year integerValue];
-    components.month = [month integerValue];
-    components.day = [day integerValue];
-    return components;
-}
-
-// Helper function to convert string to BACalculationMethod enum
-static BACalculationMethod calculationMethodFromString(NSString *methodName) {
-    if ([methodName isEqualToString:@"muslimWorldLeague"]) return BACalculationMethodMuslimWorldLeague;
-    if ([methodName isEqualToString:@"egyptian"]) return BACalculationMethodEgyptian;
-    if ([methodName isEqualToString:@"karachi"]) return BACalculationMethodKarachi;
-    if ([methodName isEqualToString:@"ummAlQura"]) return BACalculationMethodUmmAlQura;
-    if ([methodName isEqualToString:@"dubai"]) return BACalculationMethodDubai;
-    if ([methodName isEqualToString:@"moonsightingCommittee"]) return BACalculationMethodMoonsightingCommittee;
-    if ([methodName isEqualToString:@"northAmerica"]) return BACalculationMethodNorthAmerica;
-    if ([methodName isEqualToString:@"kuwait"]) return BACalculationMethodKuwait;
-    if ([methodName isEqualToString:@"qatar"]) return BACalculationMethodQatar;
-    if ([methodName isEqualToString:@"singapore"]) return BACalculationMethodSingapore;
-    if ([methodName isEqualToString:@"tehran"]) return BACalculationMethodTehran;
-    if ([methodName isEqualToString:@"turkey"]) return BACalculationMethodTurkey;
-    return BACalculationMethodOther;
-}
-
-// Helper function to convert NSDictionary to BACalculationParameters
-static BACalculationParameters *paramsFromDictionary(NSDictionary *dict) {
-    if (!dict || ![dict isKindOfClass:[NSDictionary class]]) {
-        return [[BACalculationParameters alloc] initWithMethod:BACalculationMethodMuslimWorldLeague];
-    }
-    
-    NSString *methodName = dict[@"method"];
-    BACalculationMethod method = methodName ? calculationMethodFromString(methodName) : BACalculationMethodOther;
-    
-    BACalculationParameters *params = [[BACalculationParameters alloc] initWithMethod:method];
-    
-    // Allow overriding angles for "other" method
-    if (method == BACalculationMethodOther) {
-        if (dict[@"fajrAngle"]) params.fajrAngle = [dict[@"fajrAngle"] doubleValue];
-        if (dict[@"ishaAngle"]) params.ishaAngle = [dict[@"ishaAngle"] doubleValue];
-    }
-    
-    return params;
-}
-
-@implementation Adhan
 
 RCT_EXPORT_MODULE()
+
+- (instancetype)init {
+    if (self = [super init]) {
+        impl = [[AdhanBridge alloc] init];
+    }
+    return self;
+}
 
 + (BOOL)requiresMainQueueSetup {
     return NO;
@@ -81,130 +29,109 @@ RCT_EXPORT_MODULE()
 
 // --- Promise-based (Async) Methods ---
 
-RCT_REMAP_METHOD(calculatePrayerTimes,
-                 params:(NSDictionary *)params
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
+RCT_REMAP_METHOD(validateCoordinates,
+  validateCoordinates:(NSDictionary *)coordinates
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter)
 {
-    BACoordinates *coordinates = coordinatesFromDictionary(params[@"coordinates"]);
-    NSDateComponents *date = dateComponentsFromDictionary(params[@"dateComponents"]);
-    BACalculationParameters *calcParams = paramsFromDictionary(params[@"calculationParameters"]);
+  [impl validateCoordinates:coordinates
+                   resolver:resolver
+                   rejecter:rejecter];
+}
 
-    if (!coordinates || !date) {
-        reject(@"INVALID_PARAMS", @"Invalid coordinates or date components.", nil);
-        return;
-    }
-
-    BAPrayerTimes *prayerTimes = [[BAPrayerTimes alloc] initWithCoordinates:coordinates date:date calculationParameters:calcParams];
-    if (!prayerTimes) {
-        reject(@"CALCULATION_ERROR", @"Failed to calculate prayer times.", nil);
-        return;
-    }
-
-    NSDictionary *result = @{
-        @"fajr": @([prayerTimes.fajr timeIntervalSince1970] * 1000),
-        @"sunrise": @([prayerTimes.sunrise timeIntervalSince1970] * 1000),
-        @"dhuhr": @([prayerTimes.dhuhr timeIntervalSince1970] * 1000),
-        @"asr": @([prayerTimes.asr timeIntervalSince1970] * 1000),
-        @"maghrib": @([prayerTimes.maghrib timeIntervalSince1970] * 1000),
-        @"isha": @([prayerTimes.isha timeIntervalSince1970] * 1000)
-    };
-    resolve(result);
+RCT_REMAP_METHOD(calculatePrayerTimes,
+  calculatePrayerTimes:(NSDictionary *)coordinates
+  dateComponents:(NSDictionary *)dateComponents
+  calculationParameters:(NSDictionary *)calculationParameters
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
+) {
+  [impl calculatePrayerTimes:coordinates
+            dateComponents:dateComponents
+     calculationParameters:calculationParameters
+                  resolver:resolver
+                  rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(calculateQibla,
-                 coordinates:(NSDictionary *)coordinates
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    BACoordinates *coords = coordinatesFromDictionary(coordinates);
-    if (!coords) {
-        reject(@"INVALID_COORDINATES", @"Invalid coordinates.", nil);
-        return;
-    }
-    
-    BAQibla *qibla = [[BAQibla alloc] initWithCoordinates:coords];
-    resolve(@{@"direction": @(qibla.direction)});
+  calculateQibla:(NSDictionary *)coordinates
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
+) {
+  [impl calculateQibla:coordinates
+              resolver:resolver
+              rejecter:rejecter];
 }
 
-// Note: The adhan-swift library does not have a direct equivalent for SunnahTimes in its ObjC wrapper.
-// This would need to be implemented in Swift and exposed, or calculated manually.
-// For now, returning an empty object to avoid crashes.
 RCT_REMAP_METHOD(calculateSunnahTimes,
-                 params:(NSDictionary *)params
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    resolve(@{});
+  calculateSunnahTimes:(NSDictionary *)coordinates
+  dateComponents:(NSDictionary *)dateComponents
+  calculationParameters:(NSDictionary *)calculationParameters
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
+) {
+  [impl calculateSunnahTimes:coordinates
+            dateComponents:dateComponents
+     calculationParameters:calculationParameters
+                  resolver:resolver
+                  rejecter:rejecter];
 }
 
-// Note: The adhan-swift library's currentPrayer/nextPrayer requires a Date object.
-// This simplified implementation does not yet handle this.
 RCT_REMAP_METHOD(getCurrentPrayer,
-                 params:(NSDictionary *)params
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    resolve(@{@"current": @"none", @"next": @"none"});
+  getCurrentPrayer:(NSDictionary *)coordinates
+  dateComponents:(NSDictionary *)dateComponents
+  calculationParameters:(NSDictionary *)calculationParameters
+  currentTime:(nonnull NSNumber *)currentTime
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
+) {
+  [impl getCurrentPrayer:coordinates
+        dateComponents:dateComponents
+ calculationParameters:calculationParameters
+           currentTime:currentTime
+              resolver:resolver
+              rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(getTimeForPrayer,
-                 params:(NSDictionary *)params
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    // This is a simplified stub. A full implementation would map the string prayer name to the BAPrayer enum.
-    resolve(nil);
+  getTimeForPrayer:(NSDictionary *)coordinates
+  dateComponents:(NSDictionary *)dateComponents
+  calculationParameters:(NSDictionary *)calculationParameters
+  prayer:(NSString *)prayer
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter
+) {
+  [impl getTimeForPrayer:coordinates
+        dateComponents:dateComponents
+ calculationParameters:calculationParameters
+                prayer:prayer
+              resolver:resolver
+              rejecter:rejecter];
 }
 
-RCT_REMAP_METHOD(validateCoordinates,
-                 coordinates:(NSDictionary *)coordinates
-                 resolver:(RCTPromiseResolveBlock)resolve
-                 rejecter:(RCTPromiseRejectBlock)reject)
-{
-    BACoordinates *coords = coordinatesFromDictionary(coordinates);
-    BOOL isValid = (coords != nil);
-    resolve(@(isValid));
+RCT_REMAP_METHOD(calculatePrayerTimesRange,
+                 calculatePrayerTimesRange:(NSDictionary *)coordinates
+                 startDate:(NSDictionary *)startDate
+                 endDate:(NSDictionary *)endDate
+                 calculationParameters:(NSDictionary *)calculationParameters
+                 resolver:(RCTPromiseResolveBlock)resolver
+                 rejecter:(RCTPromiseRejectBlock)rejecter) {
+    // This method is not fully implemented in Swift yet, so we resolve with an empty array.
+    resolver(@[]);
 }
-
 
 // --- Synchronous Methods ---
-// These are not part of the official adhan-swift ObjC API and would require a Swift wrapper.
-// Returning placeholder data.
 
-RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods)
-{
-    return @[
-        @{@"name": @"muslimWorldLeague", @"displayName": @"Muslim World League"},
-        @{@"name": @"egyptian", @"displayName": @"Egyptian General Authority of Survey"},
-        @{@"name": @"karachi", @"displayName": @"University of Islamic Sciences, Karachi"},
-        @{@"name": @"ummAlQura", @"displayName": @"Umm al-Qura University, Makkah"},
-        @{@"name": @"dubai", @"displayName": @"Dubai"},
-        @{@"name": @"moonsightingCommittee", @"displayName": @"Moonsighting Committee"},
-        @{@"name": @"northAmerica", @"displayName": @"North America (ISNA)"},
-        @{@"name": @"kuwait", @"displayName": @"Kuwait"},
-        @{@"name": @"qatar", @"displayName": @"Qatar"},
-        @{@"name": @"singapore", @"displayName": @"Singapore"},
-        @{@"name": @"tehran", @"displayName": @"Tehran"},
-        @{@"name": @"turkey", @"displayName": @"Turkey"},
-        @{@"name": @"other", @"displayName": @"Other"}
-    ];
+RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSArray *, getCalculationMethods) {
+  return [impl getCalculationMethods];
 }
 
-RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getMethodParameters:(NSString *)method)
-{
-    BACalculationParameters *params = [[BACalculationParameters alloc] initWithMethod:calculationMethodFromString(method)];
-    return @{
-        @"method": method,
-        @"fajrAngle": @(params.fajrAngle),
-        @"ishaAngle": @(params.ishaAngle),
-        @"ishaInterval": @(params.ishaInterval)
-    };
+RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getMethodParameters:(NSString *)method) {
+  return [impl getMethodParameters:method];
 }
 
-RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getLibraryInfo)
-{
-    return @{ @"version": @"1.0.0", @"platform": @"iOS (Official Wrapper)" };
+RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getLibraryInfo) {
+  return [impl getLibraryInfo];
 }
 
 @end
