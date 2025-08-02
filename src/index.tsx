@@ -174,8 +174,8 @@ export function getCalculationMethods(): AdhanCalculationMethodInfo[] {
  */
 export function getMethodParameters(
   method: CalculationMethod | string
-): AdhanCalculationParameters {
-  const methodName = method;
+): Promise<AdhanCalculationParameters> {
+  const methodName = typeof method === 'string' ? method : method;
   return NativeAdhan.getMethodParameters(methodName);
 }
 

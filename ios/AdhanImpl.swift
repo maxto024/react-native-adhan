@@ -160,14 +160,17 @@ public class AdhanImpl: NSObject {
         return NSNumber(value: time.timeIntervalSince1970 * 1000)
     }
     
-    @objc public func validateCoordinates(coordinates: NSDictionary) -> Bool {
+    @objc(validateCoordinates:resolver:rejecter:)
+    public func validateCoordinates(coordinates: NSDictionary, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         guard
             let lat = coordinates["latitude"] as? Double,
             let lon = coordinates["longitude"] as? Double
         else {
-            return false
+            resolver(false)
+            return
         }
-        return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
+        let isValid = lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
+        resolver(isValid)
     }
     
     @objc public func getCalculationMethods() -> [[String: Any]] {
@@ -207,14 +210,15 @@ public class AdhanImpl: NSObject {
         ]
     }
     
-    @objc(getMethodParameters:)
-    public func getMethodParameters(method: String) -> [String: Any]? {
+    @objc(getMethodParameters:resolver:rejecter:)
+    public func getMethodParameters(method: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         guard let calculationMethod = CalculationMethod.fromString(method) else {
-            return nil
+            rejecter("INVALID_METHOD", "Invalid calculation method.", nil)
+            return
         }
         
         let params = CalculationParameters(method: calculationMethod)
-        return [
+        let result = [
             "method": method,
             "fajrAngle": params.fajrAngle,
             "ishaAngle": params.ishaAngle,
@@ -224,6 +228,7 @@ public class AdhanImpl: NSObject {
             "rounding": params.rounding.rawValue,
             "shafaq": params.shafaq.rawValue
         ]
+        resolver(result)
     }
     
     @objc public func getLibraryInfo() -> [String: String] {

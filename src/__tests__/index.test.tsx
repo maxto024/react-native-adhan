@@ -234,7 +234,7 @@ describe('react-native-adhan', () => {
   });
 
   describe('getMethodParameters', () => {
-    it('should return method parameters for string input', () => {
+    it('should return method parameters for string input', async () => {
       const mockParams = {
         method: 'muslimWorldLeague',
         fajrAngle: 18.0,
@@ -244,9 +244,9 @@ describe('react-native-adhan', () => {
         shafaq: 'general',
       };
 
-      mockNativeAdhan.getMethodParameters.mockReturnValue(mockParams);
+      mockNativeAdhan.getMethodParameters.mockResolvedValue(mockParams);
 
-      const result = getMethodParameters('muslimWorldLeague');
+      const result = await getMethodParameters('muslimWorldLeague');
 
       expect(result).toEqual(mockParams);
       expect(mockNativeAdhan.getMethodParameters).toHaveBeenCalledWith(
@@ -254,7 +254,7 @@ describe('react-native-adhan', () => {
       );
     });
 
-    it('should return method parameters for enum input', () => {
+    it('should return method parameters for enum input', async () => {
       const mockParams = {
         method: 'egyptian',
         fajrAngle: 19.5,
@@ -264,9 +264,9 @@ describe('react-native-adhan', () => {
         shafaq: 'general',
       };
 
-      mockNativeAdhan.getMethodParameters.mockReturnValue(mockParams);
+      mockNativeAdhan.getMethodParameters.mockResolvedValue(mockParams);
 
-      const result = getMethodParameters(CalculationMethod.EGYPTIAN);
+      const result = await getMethodParameters(CalculationMethod.EGYPTIAN);
 
       expect(result).toEqual(mockParams);
       expect(mockNativeAdhan.getMethodParameters).toHaveBeenCalledWith(
