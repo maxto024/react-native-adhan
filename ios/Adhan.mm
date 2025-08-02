@@ -1,4 +1,4 @@
-#import "Adhan.h"
+#import "Adhan-Swift.h"
 #import <React/RCTBridgeModule.h>
 #import <React/RCTLog.h>
 #import "Adhan-Swift.h"
