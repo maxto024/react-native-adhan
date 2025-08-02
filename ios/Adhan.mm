@@ -29,11 +29,10 @@ RCT_EXPORT_MODULE()
 
 // --- Promise-based (Async) Methods ---
 
-RCT_REMAP_METHOD(validateCoordinates,
-  validateCoordinates:(NSDictionary *)coordinates
-  resolver:(RCTPromiseResolveBlock)resolve
-  rejecter:(RCTPromiseRejectBlock)reject
-) {
+RCT_EXPORT_METHOD(validateCoordinates:(NSDictionary *)coordinates
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
   [impl validateCoordinates:coordinates
                    resolver:resolve
                    rejecter:reject];
