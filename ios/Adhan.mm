@@ -29,14 +29,14 @@ RCT_EXPORT_MODULE()
 
 // --- Promise-based (Async) Methods ---
 
-RCT_EXPORT_METHOD(validateCoordinates:(NSDictionary *)coordinates
-                  resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
+RCT_REMAP_METHOD(validateCoordinates,
+  validateCoordinates:(NSDictionary *)coordinates
+  resolver:(RCTPromiseResolveBlock)resolver
+  rejecter:(RCTPromiseRejectBlock)rejecter)
 {
-  NSDictionary *safeCoordinates = [coordinates copy];
-  [impl validateCoordinates:safeCoordinates
-                    resolve:resolve
-                     reject:reject];
+  [impl validateCoordinates:coordinates
+                   resolver:resolver
+                   rejecter:rejecter];
 }
 
 RCT_REMAP_METHOD(calculatePrayerTimes,
@@ -116,8 +116,7 @@ RCT_REMAP_METHOD(calculatePrayerTimesRange,
                  calculationParameters:(NSDictionary *)calculationParameters
                  resolver:(RCTPromiseResolveBlock)resolver
                  rejecter:(RCTPromiseRejectBlock)rejecter) {
-    
-    // Simplified stub for now
+    // This method is not fully implemented in Swift yet, so we resolve with an empty array.
     resolver(@[]);
 }
 
