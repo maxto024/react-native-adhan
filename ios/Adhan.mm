@@ -1,6 +1,6 @@
 #import "Adhan.h"
 #import <React/RCTLog.h>
-@import React;
+
 #import "Adhan-Swift.h"
 
 @implementation Adhan {
