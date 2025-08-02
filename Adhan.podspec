@@ -16,8 +16,15 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,mm,swift}"
 
   s.pod_target_xcconfig = {
-    'DEFINES_MODULE' => 'YES'
+    'DEFINES_MODULE' => 'YES',
+    'CLANG_CXX_LANGUAGE_STANDARD' => 'c++17',
+    'SWIFT_OBJC_INTERFACE_HEADER_NAME' => 'Adhan-Swift.h',
+    'SWIFT_VERSION' => '5.0'
   }
+
+  s.dependency "React-Codegen"
+  s.dependency "ReactCommon/turbomodule/core"
+  s.dependency "React-Core"
 
   install_modules_dependencies(s)
 end

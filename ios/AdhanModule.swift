@@ -1,9 +1,10 @@
 // AdhanModule.swift
 
 import Foundation
+import React
 
 @objc(AdhanModule)
-class AdhanModule: NSObject {
+public class AdhanModule: NSObject {
 
     @objc(calculatePrayerTimes:dateComponents:calculationParameters:resolver:rejecter:)
     func calculatePrayerTimes(

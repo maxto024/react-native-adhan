@@ -1,8 +1,14 @@
 #import "Adhan.h"
 #import <React/RCTBridge.h>
 #import <React/RCTUtils.h>
-#import "Adhan-Swift.h"
 #include <ReactCommon/RCTTurboModule.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#import <AdhanSpec/AdhanSpec.h>
+#endif
+
+// Forward declare Swift class - will be resolved at runtime
+@class AdhanModule;
 
 @interface Adhan ()
 
@@ -20,7 +26,13 @@ RCT_EXPORT_MODULE()
 {
     self = [super init];
     if (self) {
-        self.module = [[AdhanModule alloc] init];
+        // Use runtime class lookup to find the Swift class
+        Class AdhanModuleClass = NSClassFromString(@"AdhanModule");
+        if (AdhanModuleClass) {
+            self.module = [[AdhanModuleClass alloc] init];
+        } else {
+            NSLog(@"Error: AdhanModule Swift class not found");
+        }
     }
     return self;
 }
