@@ -2,7 +2,15 @@ import Foundation
 import React
 
 @objc(AdhanImpl)
-public class AdhanImpl: NSObject {
+public class AdhanImpl: NSObject, RCTBridgeModule {
+
+  @objc public static func moduleName() -> String! {
+    return "Adhan"
+  }
+
+  @objc public static func requiresMainQueueSetup() -> Bool {
+    return false
+  }
 
   // MARK: - Asynchronous Bridged Methods
 
@@ -13,6 +21,15 @@ public class AdhanImpl: NSObject {
     rejecter: @escaping RCTPromiseRejectBlock
   ) {
     resolver(validateCoordinatesSync(coordinates))
+  }
+
+  // Legacy alias for old selector name
+  @objc(validateCoordinates:resolve:reject:)
+  public func validateCoordinates(_ coordinates: NSDictionary,
+                                  resolve: @escaping RCTPromiseResolveBlock,
+                                  reject: @escaping RCTPromiseRejectBlock) {
+    // Forward to the new implementation
+    validateCoordinates(coordinates, resolver: resolve, rejecter: reject)
   }
 
   @objc(calculatePrayerTimes:dateComponents:calculationParameters:resolver:rejecter:)
