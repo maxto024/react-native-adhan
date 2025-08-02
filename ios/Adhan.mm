@@ -33,7 +33,8 @@ RCT_EXPORT_METHOD(validateCoordinates:(NSDictionary *)coordinates
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {
-  [impl validateCoordinates:coordinates
+  NSDictionary *safeCoordinates = [coordinates copy];
+  [impl validateCoordinates:safeCoordinates
                     resolve:resolve
                      reject:reject];
 }
