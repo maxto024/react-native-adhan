@@ -1,5 +1,4 @@
 #import "Adhan.h"
-#import <React/RCTBridgeModule.h>
 #import <React/RCTLog.h>
 
 // Correctly import the auto-generated header based on the podspec's module_name
@@ -78,12 +77,6 @@ RCT_EXPORT_MODULE()
     return NO;
 }
 
-#if RCT_NEW_ARCH_ENABLED
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params {
-    return std::make_shared<facebook::react::NativeAdhanSpecJSI>(params);
-}
-#endif
 
 // --- Asynchronous Methods ---
 
