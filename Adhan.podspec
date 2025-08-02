@@ -37,5 +37,12 @@ Pod::Spec.new do |s|
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
   }
 
+  s.pod_target_xcconfig = {
+    "DEFINES_MODULE"               => "YES",
+    "CLANG_ENABLE_MODULES"        => "YES",
+    "SWIFT_VERSION"               => "5.0",
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+  }
+
   install_modules_dependencies(s)
 end
