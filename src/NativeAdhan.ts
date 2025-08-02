@@ -152,7 +152,7 @@ export interface Spec extends TurboModule {
    * @param method Method name
    * @returns Default calculation parameters for the method
    */
-  getMethodParameters(method: string): AdhanCalculationParameters;
+  getMethodParameters(method: string): Promise<AdhanCalculationParameters>;
 
   /**
    * Calculate prayer times for a date range (bulk calculation)
