@@ -112,15 +112,6 @@ RCT_EXPORT_MODULE()
     resolve(@{@"direction": @(qibla.direction)});
 }
 
-- (void)validateCoordinates:(NSDictionary *)coordinates
-                   resolver:(RCTPromiseResolveBlock)resolve
-                   rejecter:(RCTPromiseRejectBlock)reject
-{
-    BACoordinates *coords = coordinatesFromDictionary(coordinates);
-    BOOL isValid = (coords != nil);
-    resolve(@(isValid));
-}
-
 - (NSArray<NSDictionary *> *)getCalculationMethods
 {
     return @[
