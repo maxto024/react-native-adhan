@@ -303,8 +303,26 @@ class AdhanModule(reactContext: ReactApplicationContext) :
       val prayerTimes = PrayerTimes(coord, dateComp, calcParams)
       val time = instantFromTimestamp(currentTime)
 
-      val currentPrayer = prayerTimes.currentPrayer(time)
-      val nextPrayer = prayerTimes.nextPrayer(time)
+      // Manual implementation matching iOS logic exactly
+      val currentPrayer = when {
+        time >= prayerTimes.isha -> Prayer.ISHA
+        time >= prayerTimes.maghrib -> Prayer.MAGHRIB  
+        time >= prayerTimes.asr -> Prayer.ASR
+        time >= prayerTimes.dhuhr -> Prayer.DHUHR
+        time >= prayerTimes.sunrise -> Prayer.SUNRISE
+        time >= prayerTimes.fajr -> Prayer.FAJR
+        else -> Prayer.NONE
+      }
+      
+      val nextPrayer = when {
+        time < prayerTimes.fajr -> Prayer.FAJR
+        time < prayerTimes.sunrise -> Prayer.SUNRISE
+        time < prayerTimes.dhuhr -> Prayer.DHUHR
+        time < prayerTimes.asr -> Prayer.ASR
+        time < prayerTimes.maghrib -> Prayer.MAGHRIB
+        time < prayerTimes.isha -> Prayer.ISHA
+        else -> Prayer.NONE // After Isha, next is Fajr of next day
+      }
 
       val result = WritableNativeMap().apply {
         putString("current", prayerToString(currentPrayer))

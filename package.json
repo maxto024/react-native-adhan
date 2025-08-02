@@ -1,7 +1,7 @@
 {
   "name": "react-native-adhan",
-  "version": "0.1.0",
-  "description": "A React Native TurboModule for accurate Islamic prayer times and Qibla direction, using native iOS and Android implementations",
+  "version": "1.0.0",
+  "description": "A React Native TurboModule for accurate Islamic prayer times and Qibla direction calculations. Built with the New Architecture (TurboModules) for optimal performance and uses the official adhan-swift and adhan-kotlin libraries for precise calculations.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -42,8 +42,22 @@
   },
   "keywords": [
     "react-native",
+    "islamic",
+    "prayer-times",
+    "adhan",
+    "qibla",
+    "turbo-module",
+    "new-architecture",
     "ios",
-    "android"
+    "android",
+    "muslim",
+    "salah",
+    "prayer",
+    "calculation",
+    "mosque",
+    "ramadan",
+    "hijri",
+    "islamic-calendar"
   ],
   "repository": {
     "type": "git",
