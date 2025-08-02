@@ -1,5 +1,5 @@
 //
-//  Minute.swift
+//  Coordinates.swift
 //  Adhan
 //
 //  Copyright © 2018 Batoul Apps. All rights reserved.
@@ -25,12 +25,20 @@
 
 import Foundation
 
-public typealias Minute = Int
+public struct Coordinates: Codable, Equatable {
+    let latitude: Double
+    let longitude: Double
 
-
-
-internal extension Minute {
-    var timeInterval: TimeInterval {
-        return TimeInterval(self * 60)
+    public init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+    
+    var latitudeAngle: Angle {
+        return Angle(latitude)
+    }
+    
+    var longitudeAngle: Angle {
+        return Angle(longitude)
     }
 }
