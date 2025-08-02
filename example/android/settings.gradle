@@ -1,0 +1,12 @@
+pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
+plugins { id("com.facebook.react.settings") }
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+rootProject.name = 'adhan.example'
+include ':app'
+includeBuild('../node_modules/@react-native/gradle-plugin')
+
+include ':react-native-adhan'
+project(':react-native-adhan').projectDir = new File(rootProject.projectDir, '../../android')
+
+include ':adhan-core'
+project(':adhan-core').projectDir = new File(rootProject.projectDir, '../../android/adhan-core')

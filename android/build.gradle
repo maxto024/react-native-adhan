@@ -1,0 +1,30 @@
+apply plugin: "com.android.library"
+apply plugin: "com.facebook.react"
+apply plugin: "kotlin-android"
+
+android {
+    compileSdk 34
+    namespace "com.adhan"
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 34
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+     compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    // Adhan Kotlin library
+    implementation project(":adhan-core")
+    implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.4.1"
+
+    // React Native
+    implementation "com.facebook.react:react-android"
+}
