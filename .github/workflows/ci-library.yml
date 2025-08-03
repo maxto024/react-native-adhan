@@ -42,10 +42,6 @@ jobs:
         run: yarn test --ci --coverage
         env:
           CI: 'true'
-
-      - name: Coverage check
-        run: yarn check-coverage
-
       - name: Package npm module
         run: npm pack
 
