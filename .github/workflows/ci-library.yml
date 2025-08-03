@@ -1,0 +1,93 @@
+name: CI – Build & Test Library
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-matrix:
+    name: 🛠 Build & Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["18.x", "20.x"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build with Bob
+        run: yarn prepare
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Run Jest (⏱ CI mode)
+        run: yarn test --ci --coverage
+        env:
+          CI: 'true'
+
+      - name: Coverage check
+        run: yarn check-coverage
+
+      - name: Package npm module
+        run: npm pack
+
+      - name: Preview `.tgz` contents
+        run: tar -tf react-native-adhan-*.tgz | sed -e 's|^package/||'
+
+      - uses: actions/upload-artifact@v4
+        name: library-packages
+        with:
+          path: react-native-adhan-*.tgz
+
+  smoke-android:
+    name: ✅ Build Example Android
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    env:
+      TURBO_CACHE_DIR: .turbo/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: yarn
+      - name: Ensure Turborepo cache
+        id: turbo
+        run: |
+          npm ci
+          echo "::set-output name=turbocache::$(node -p "($(npx turbo run build:android --dry=json --cache-dir $TURBO_CACHE_DIR).tasks[0].cache.status)")"
+      - name: Build Android Example
+        if: steps.turbo.outputs.turbocache != 'HIT'
+        run: yarn turbo run build:android --cache-dir $TURBO_CACHE_DIR
+
+  smoke-ios:
+    name: ✅ Build Example iOS
+    needs: build-matrix
+    runs-on: macos-latest
+    env:
+      TURBO_CACHE_DIR: .turbo/ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: yarn
+      - name: Build iOS Example
+        run: yarn turbo run build:ios --cache-dir $TURBO_CACHE_DIR

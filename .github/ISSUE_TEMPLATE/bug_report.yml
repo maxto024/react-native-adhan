@@ -1,6 +1,6 @@
 name: 🐛 Bug report
 description: Report a reproducible bug or regression in this library.
-labels: [bug]
+labels: ["bug", "needs-triage"]
 body:
   - type: markdown
     attributes:
@@ -16,11 +16,11 @@ body:
       label: Before submitting a new issue
       description: Please perform simple checks first.
       options:
-        - label: I tested using the latest version of the library, as the bug might be already fixed.
+        - label: ✅ I tested using the latest version of the library, as the bug might be already fixed.
           required: true
-        - label: I tested using a [supported version](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md) of react native.
+        - label: ✅ I tested using a [supported version](https://github.com/reactwg/react-native-releases/blob/main/docs/support.md) of react native.
           required: true
-        - label: I checked for possible duplicate issues, with possible answers.
+        - label: ✅ I checked for possible duplicate issues, with possible answers.
           required: true
   - type: textarea
     id: summary
@@ -53,6 +53,7 @@ body:
       label: Steps to reproduce
       description: |
         You must provide a clear list of steps and code to reproduce the problem.
+        _💡 Code snippets or links are strongly encouraged._
       value: |
         1. …
         2. …
@@ -64,4 +65,12 @@ body:
       label: Reproducible example repository 
       description: Please provide a link to a repository on GitHub with a reproducible example.
     validations:
-      required: true
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Optional logs or stack traces
+      description: Paste any relevant logs, stack traces, or terminal output here.
+      render: shell
+    validations:
+      required: false
