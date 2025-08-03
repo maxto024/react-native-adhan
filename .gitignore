@@ -105,6 +105,9 @@ lib/
 ios/generated
 android/generated
 
+# Local npm pack outputs
+*.tgz
+
 # React Native Nitro Modules
 nitrogen/
 
@@ -151,4 +154,3 @@ site/
 
 # Watchman
 .watchman-cookie-*
-

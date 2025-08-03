@@ -1,6 +1,6 @@
 {
   "name": "react-native-adhan",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A React Native TurboModule for accurate Islamic prayer times and Qibla direction calculations. Built with the New Architecture (TurboModules) for optimal performance and uses the official adhan-swift and adhan-kotlin libraries for precise calculations.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -31,7 +31,8 @@
     "!**/build",
     "!**/.gradle",
     "!**/node_modules",
-    "!**/.*"
+    "!**/.*",
+    "plugin.js"
   ],
   "scripts": {
     "example": "yarn workspace react-native-adhan-example",
@@ -105,7 +106,13 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "expo": ">=48.0.0"
+  },
+  "peerDependenciesMeta": {
+    "expo": {
+      "optional": true
+    }
   },
   "workspaces": [
     "example"
