@@ -23,7 +23,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'yarn'
+
+      - run: yarn cache clean
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -67,11 +69,12 @@ jobs:
         with:
           node-version: 18.x
           cache: yarn
+      - run: yarn cache clean
       - name: Ensure Turborepo cache
         id: turbo
         run: |
-          npm ci
-          echo "::set-output name=turbocache::$(node -p "($(npx turbo run build:android --dry=json --cache-dir $TURBO_CACHE_DIR).tasks[0].cache.status)")"
+          yarn install --immutable
+          echo "turbocache=$(node -p \"($(npx turbo run build:android --dry=json --cache-dir $TURBO_CACHE_DIR).tasks[0].cache.status)\")" >> $GITHUB_OUTPUT
       - name: Build Android Example
         if: steps.turbo.outputs.turbocache != 'HIT'
         run: yarn turbo run build:android --cache-dir $TURBO_CACHE_DIR
@@ -89,5 +92,7 @@ jobs:
         with:
           node-version: 18.x
           cache: yarn
+      - run: yarn cache clean
+      - run: yarn install --immutable
       - name: Build iOS Example
         run: yarn turbo run build:ios --cache-dir $TURBO_CACHE_DIR
