@@ -15,22 +15,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ark/schema@npm:0.46.0":
-  version: 0.46.0
-  resolution: "@ark/schema@npm:0.46.0"
-  dependencies:
-    "@ark/util": 0.46.0
-  checksum: a4e7bc0e1c23009c7702ada7cfcbb1638af76f9721c43f96432844ec8616da6fc8121057fb87b0b80142558cf5c3e6141f40443cf43dd026ada8fd4acd635565
-  languageName: node
-  linkType: hard
-
-"@ark/util@npm:0.46.0":
-  version: 0.46.0
-  resolution: "@ark/util@npm:0.46.0"
-  checksum: 0c0ceeb10aa0806860f7a7922586a05cda2945f7f598b414b4ebf268a6b45b00f9a854d6afd6b59df58c733e90d00b230194dd6a180a3a23d0eb64612be1b0e0
-  languageName: node
-  linkType: hard
-
 "@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.12.13, @babel/code-frame@npm:^7.24.7, @babel/code-frame@npm:^7.26.2, @babel/code-frame@npm:^7.27.1":
   version: 7.27.1
   resolution: "@babel/code-frame@npm:7.27.1"
@@ -3754,13 +3738,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"arktype@npm:^2.1.15":
-  version: 2.1.20
-  resolution: "arktype@npm:2.1.20"
-  dependencies:
-    "@ark/schema": 0.46.0
-    "@ark/util": 0.46.0
-  checksum: 5c02dda98606b83b35bbc66934259e3f30c4b4486c32e470e199da533c0af568951502173d7d7a5e64a2e53667eb36d10d772ce46c0bff204fab759430614c9b
+"arktype@npm:1.0.24-alpha":
+  version: 1.0.24-alpha
+  resolution: "arktype@npm:1.0.24-alpha"
+  checksum: 8b9a263b8036f5b0658de5441238e4296b6cd82e59cb5d25eed4e43503dbe6f7f291115ffccfddf2d1c9101db13730db4d53992ef191241ae7abff6a36a327c2
   languageName: node
   linkType: hard
 
