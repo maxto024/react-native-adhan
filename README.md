@@ -20,6 +20,50 @@ A React Native TurboModule for accurate Islamic prayer times and Qibla direction
 npm install react-native-adhan
 ```
 
+### ⚠️ Expo Go Incompatibility
+
+This library uses native C++/Swift/Kotlin code via TurboModules for maximum performance and accuracy. As a result, **it will not work in the standard Expo Go app**, which is a sandboxed environment that cannot be extended with custom native code.
+
+### ✅ Using with Expo (Custom Dev Client)
+
+To use `react-native-adhan` in your Expo project, you need to build a **custom development client**. This is a version of your app that includes the native modules you've installed.
+
+Here’s how to set it up:
+
+1.  **Install the library and its dependencies:**
+
+    ```sh
+    npx expo install react-native-adhan
+    ```
+
+2.  **Add the config plugin to your `app.json`:**
+
+    This step automatically links the native code when you build your app.
+
+    ```json
+    {
+      "expo": {
+        "plugins": [
+          "react-native-adhan"
+        ]
+      }
+    }
+    ```
+
+3.  **Build and run your custom dev client:**
+
+    This command compiles the native code and installs the client on your simulator or device.
+
+    ```sh
+    # For iOS
+    npx expo run:ios
+
+    # For Android
+    npx expo run:android
+    ```
+
+Once the custom client is built, you can develop your app just like you would with Expo Go, but with full access to all the native features of `react-native-adhan`.
+
 ### iOS Setup
 
 If using CocoaPods, add this to your `Podfile`:
