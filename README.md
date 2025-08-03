@@ -164,8 +164,6 @@ Contributions are welcome! Please see the [Contributing Guide](./CONTRIBUTING.md
 
 ## License
 
+MIT © 2025 Mohamed Elmi Hassan
+
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
-
----
-
-_MIT © 2025 Mohamed Elmi Hassan_
