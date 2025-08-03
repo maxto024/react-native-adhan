@@ -14,15 +14,33 @@ android {
     buildFeatures {
         buildConfig true
     }
-     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/java'
+    }
+}
+
+// React Native TurboModule standard JVM target configuration
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
 dependencies {
-    // Adhan Kotlin library
-    implementation project(":adhan-core")
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.10"
     implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.4.1"
 
     // React Native

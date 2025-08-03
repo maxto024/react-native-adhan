@@ -1,2 +1,0 @@
-include ':adhan-core'
-project(':adhan-core').projectDir = new File(rootProject.projectDir, '../android/adhan-core')

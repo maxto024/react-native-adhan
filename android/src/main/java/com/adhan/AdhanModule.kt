@@ -1,6 +1,7 @@
 package com.adhan
 
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeMap
@@ -32,7 +33,7 @@ import kotlinx.datetime.plus
 
 @ReactModule(name = AdhanModule.NAME)
 class AdhanModule(reactContext: ReactApplicationContext) :
-  NativeAdhanSpec(reactContext) {
+  ReactContextBaseJavaModule(reactContext) {
 
   override fun getName(): String {
     return NAME
