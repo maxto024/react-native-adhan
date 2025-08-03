@@ -10261,12 +10261,13 @@ __metadata:
     "@types/react": ^19.0.0
     react: 19.0.0
     react-native: 0.79.2
+    react-native-adhan: "workspace:*"
     react-native-builder-bob: ^0.40.13
     react-native-monorepo-config: ^0.1.9
   languageName: unknown
   linkType: soft
 
-"react-native-adhan@workspace:.":
+"react-native-adhan@workspace:*, react-native-adhan@workspace:.":
   version: 0.0.0-use.local
   resolution: "react-native-adhan@workspace:."
   dependencies:
@@ -10295,8 +10296,12 @@ __metadata:
     turbo: ^1.10.7
     typescript: ^5.8.3
   peerDependencies:
+    expo: ">=48.0.0"
     react: "*"
     react-native: "*"
+  peerDependenciesMeta:
+    expo:
+      optional: true
   languageName: unknown
   linkType: soft
 
