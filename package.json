@@ -99,7 +99,7 @@
     "prettier": "^3.0.3",
     "react": "19.0.0",
     "react-native": "0.79.2",
-    "react-native-builder-bob": "0.23.0",
+    "react-native-builder-bob": "^0.40.13",
     "release-it": "^17.10.0",
     "turbo": "^1.10.7",
     "typescript": "^5.8.3"
@@ -115,6 +115,7 @@
     }
   },
   "workspaces": [
+    ".",
     "example"
   ],
   "packageManager": "yarn@3.6.1",
