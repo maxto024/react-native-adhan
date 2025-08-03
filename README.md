@@ -3,7 +3,7 @@
 [![NPM Version](https://img.shields.io/npm/v/react-native-adhan.svg)](https://www.npmjs.com/package/react-native-adhan)
 [![NPM Downloads](https://img.shields.io/npm/dm/react-native-adhan.svg)](https://www.npmjs.com/package/react-native-adhan)
 [![License](https://img.shields.io/npm/l/react-native-adhan.svg)](https://github.com/maxto024/react-native-adhan/blob/main/LICENSE)
-[![CI](https://github.com/maxto024/react-native-adhan/actions/workflows/ci.yml/badge.svg)](https://github.com/maxto024/react-native-adhan/actions/workflows/ci.yml)
+[![CI](https://github.com/maxto024/react-native-adhan/actions/workflows/ci.yml/badge.svg)](https://github.com/maxto024/react-native-adhan/actions/workflows/ci-library.yml)
 
 **Accurate Islamic prayer times and Qibla direction for React Native.**
 
