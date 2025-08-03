@@ -64,16 +64,6 @@ export default function App() {
   }, []);
 
   // Calculate all prayer data when coordinates or method changes
-  useEffect(() => {
-    const fetchData = async () => {
-      const isValid = validateCoordinates(coordinates);
-      if (isValid) {
-        await calculateAllData();
-      }
-    };
-    fetchData();
-  }, [coordinates, method, madhab, calculateAllData]);
-
   const calculateAllData = useCallback(async () => {
     setLoading(true);
     try {
@@ -117,6 +107,16 @@ export default function App() {
       setLoading(false);
     }
   }, [coordinates, method, madhab]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const isValid = validateCoordinates(coordinates);
+      if (isValid) {
+        await calculateAllData();
+      }
+    };
+    fetchData();
+  }, [coordinates, method, madhab, calculateAllData]);
 
   const formatTime = (timestamp: number): string => {
     const date = new Date(timestamp);
