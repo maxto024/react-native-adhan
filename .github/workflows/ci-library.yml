@@ -48,7 +48,7 @@ jobs:
         run: npm pack
 
       - name: Preview `.tgz` contents
-        run: tar -tf react-native-adhan-*.tgz | sed -e 's|^package/||'
+        run: bash -c "tar -tf react-native-adhan-*.tgz | sed -e 's|^package/||'"
 
       - uses: actions/upload-artifact@v4
         name: Upload library-packages-${{ matrix.node-version }}
