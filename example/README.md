@@ -1,3 +1,6 @@
+
+![CI](https://github.com/maxto024/react-native-adhan/actions/workflows/ci-library.yml/badge.svg)
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
