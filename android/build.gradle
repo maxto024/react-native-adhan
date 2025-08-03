@@ -1,18 +1,28 @@
-apply plugin: "com.android.library"
-apply plugin: "com.facebook.react"
-apply plugin: "kotlin-android"
+buildscript {
+    ext.safeExtGet = {prop, fallback ->
+        rootProject.ext.has(prop) ?
+        rootProject.ext.get(prop) : fallback
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.facebook.react'
+apply plugin: 'org.jetbrains.kotlin.android'
+
+def foundCodegenVersion = findProperty('codegenVersion') ?: '1.0.0'
+
+react {
+    codegenDir = file("$buildDir/generated/source/codegen")
+}
 
 android {
-    compileSdk 34
+    compileSdkVersion safeExtGet('compileSdkVersion', 35)
     namespace "com.adhan"
 
     defaultConfig {
-        minSdk 21
-        targetSdk 34
-    }
-
-    buildFeatures {
-        buildConfig true
+        minSdkVersion safeExtGet('minSdkVersion', 24)
+        targetSdkVersion safeExtGet('targetSdkVersion', 35)
+        buildConfigField("String", "CODEGEN_VERSION", "\"$foundCodegenVersion\"")
     }
 
     compileOptions {
@@ -20,28 +30,34 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
+    buildFeatures {
+        buildConfig true
+    }
+
     sourceSets {
         main.java.srcDirs += 'src/main/java'
     }
 }
 
-// React Native TurboModule standard JVM target configuration
+kotlin {
+    jvmToolchain(17)
+}
+
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
         jvmTarget = "17"
     }
 }
 
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
+repositories {
+    mavenCentral()
+    google()
 }
 
 dependencies {
-    // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.10"
-    implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.4.1"
+    // Kotlin - Use version compatible with JVM 17
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
+    implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.6.0"
 
     // React Native
     implementation "com.facebook.react:react-android"

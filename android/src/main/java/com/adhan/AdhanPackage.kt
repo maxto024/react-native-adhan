@@ -8,7 +8,7 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 
 class AdhanPackage : TurboReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-        return if (name == AdhanModule.NAME) {
+        return if (name == NativeAdhanSpec.NAME) {
             AdhanModule(reactContext)
         } else {
             null
@@ -18,9 +18,9 @@ class AdhanPackage : TurboReactPackage() {
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
         return ReactModuleInfoProvider {
             val moduleInfos = mutableMapOf<String, ReactModuleInfo>()
-            moduleInfos[AdhanModule.NAME] = ReactModuleInfo(
-                AdhanModule.NAME,
-                AdhanModule.NAME,
+            moduleInfos[NativeAdhanSpec.NAME] = ReactModuleInfo(
+                NativeAdhanSpec.NAME,
+                NativeAdhanSpec.NAME,
                 false, // canOverrideExistingModule
                 false, // needsEagerInit
                 true, // hasConstants

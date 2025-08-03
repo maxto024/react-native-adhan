@@ -31,13 +31,9 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 
-@ReactModule(name = AdhanModule.NAME)
+@ReactModule(name = NativeAdhanSpec.NAME)
 class AdhanModule(reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext) {
-
-  override fun getName(): String {
-    return NAME
-  }
+  NativeAdhanSpec(reactContext) {
 
   // Helper methods
   private fun coordinatesFromMap(map: ReadableMap): Coordinates? {
@@ -592,7 +588,4 @@ class AdhanModule(reactContext: ReactApplicationContext) :
     }
   }
 
-  companion object {
-    const val NAME = "Adhan"
-  }
 }
