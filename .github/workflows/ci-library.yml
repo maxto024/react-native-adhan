@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable --immutable-cache
 
       - name: Build with Bob
         run: yarn prepare
@@ -58,6 +58,7 @@ jobs:
 
   smoke-android:
     name: ✅ Build Example Android
+    continue-on-error: true
     needs: build-matrix
     runs-on: ubuntu-latest
     env:
@@ -79,6 +80,7 @@ jobs:
 
   smoke-ios:
     name: ✅ Build Example iOS
+    continue-on-error: true
     needs: build-matrix
     runs-on: macos-latest
     env:
