@@ -23,13 +23,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: yarn
+          cache: 'npm'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Build with Bob
-        run: yarn prepare
+        run: npm run prepare
 
       - name: Lint
         run: yarn lint
